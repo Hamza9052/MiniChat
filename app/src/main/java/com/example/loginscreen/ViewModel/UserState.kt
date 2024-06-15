@@ -1,6 +1,6 @@
 package com.example.loginscreen.ViewModel
 
-data class UsersState(
+data class UserState(
     val loginId:String,
     val fullName:String,
     val phoneNumber:String="",
