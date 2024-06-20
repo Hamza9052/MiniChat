@@ -98,6 +98,13 @@ dependencies {
     api ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     api ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    //Url image
+    implementation("io.coil-kt:coil-compose:2.0.0-rc01")
+
+    //icons
+    implementation ("androidx.compose.material:material-icons-extended:1.6.8")
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

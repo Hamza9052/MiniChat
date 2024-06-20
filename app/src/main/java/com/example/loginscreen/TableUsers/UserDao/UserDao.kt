@@ -15,6 +15,6 @@ interface UserDao {
     @Delete
     suspend fun deleteUser(user:User)
 
-    @Query("SELECT * FROM user WHERE loginId = :userId")
-    fun getUserByLoginId(userId: String?): User?
+    @Query("SELECT * FROM user WHERE loginId = :userId AND password = :password")
+    fun getUserByLoginId(userId: String?,password:String?): User?
 }
