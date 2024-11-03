@@ -3,7 +3,9 @@
 package com.example.loginscreen.UiHome
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,13 +16,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +49,7 @@ import androidx.navigation.NavController
 import com.example.loginscreen.Event.UserEvent
 
 import com.example.loginscreen.Event.user
+import com.example.loginscreen.R
 import com.example.loginscreen.ViewModel.UserViewModel
 
 @Preview
@@ -57,7 +66,8 @@ fun Login(
     }
    Column(
        modifier = Modifier
-           .fillMaxSize(),
+           .fillMaxSize()
+           .background(Color.DarkGray),
        verticalArrangement = Arrangement.Center,
        horizontalAlignment = Alignment.CenterHorizontally
    ) {
@@ -65,7 +75,7 @@ fun Login(
        Image(
            imageVector = Icons.Filled.AccountCircle,
            contentDescription ="Logo",
-
+           colorFilter = ColorFilter.tint(colorResource(R.color.BurlyWood)),
            alignment = Alignment.Center,
            modifier = Modifier
                .width(100.dp)
@@ -81,12 +91,20 @@ fun Login(
                        emial = it
                    )
                },label = {
-               Text(text = "LoginId")
+               Text(
+                   text = "Email",
+                   color = colorResource(R.color.BurlyWood),
+                   fontWeight = FontWeight.Light
+               )
            },
+           colors = OutlinedTextFieldDefaults.colors(focusedBorderColor =  colorResource(R.color.BurlyWood)),
            modifier = Modifier.width(330.dp),
            singleLine = true,
            shape = RoundedCornerShape(15.dp),
-           textStyle = TextStyle(color = Color.Black)
+           textStyle = TextStyle(
+               color =colorResource(R.color.BurlyWood),
+               fontWeight = FontWeight.Bold
+                       )
        )
 
        Spacer(modifier = Modifier.weight(0.1f))
@@ -94,17 +112,28 @@ fun Login(
        OutlinedTextField(
            value = user?.password?:"",
            onValueChange ={
-               user = user.copy(
+               user =
+                   user.copy(
                    password = it
                )
 
            },label = {
-               Text(text = "Password")
+               Text(
+                   text = "Password",
+                   color = colorResource(R.color.BurlyWood),
+                   fontWeight = FontWeight.Light
+               )
            },
            modifier = Modifier.width(330.dp),
            singleLine = true,
+           colors = OutlinedTextFieldDefaults.colors(
+               focusedBorderColor = colorResource(R.color.BurlyWood)
+           ),
            shape = RoundedCornerShape(15.dp),
-           textStyle = TextStyle(color = Color.Black),
+           textStyle = TextStyle(
+               color = colorResource(R.color.BurlyWood),
+               fontWeight = FontWeight.Bold
+           ),
            visualTransformation = if (showPassword){
                VisualTransformation.None
            }else{
@@ -114,16 +143,18 @@ fun Login(
                if (showPassword) {
                    IconButton(onClick = { showPassword = false }) {
                        Icon(
-                           imageVector = Icons.Filled.AccountCircle,
-                           contentDescription = "hide_password"
+                           imageVector = Icons.Default.VisibilityOff,
+                           contentDescription = "hide_password",
+                           tint = colorResource(R.color.DarkSlateGray)
                        )
                    }
                } else {
                    IconButton(
                        onClick = { showPassword = true }) {
                        Icon(
-                           imageVector = Icons.Filled.AccountCircle,
-                           contentDescription = "hide_password"
+                           imageVector = Icons.Filled.Visibility,
+                           contentDescription = "hide_password",
+                           tint = colorResource(R.color.BurlyWood)
                        )
                    }
                }
@@ -133,18 +164,32 @@ fun Login(
 
        Spacer(modifier = Modifier.weight(0.1f))
 
+
        Button(
            onClick = {
-               ViewModel.action(UserEvent.Login(user){state->
-                   if (state){
-                       navController.navigate(Screen.Main_Screen.route)
-                   }else{
-                       navController.navigate(Screen.register.route)
+               if (
+                   user.password.isEmpty() ||
+                   user.emial.isEmpty() ||
+                   user.password.isEmpty() && user.emial.isEmpty() ){
+                   Toast.makeText(
+                       navController.context,
+                       "password or email is empty!",
+                       Toast.LENGTH_SHORT).show().toString()
 
-                   }
+               }else{
+                   ViewModel.action(UserEvent.Login(user){state->
+                       if (state){
+                           navController.navigate(Screen.Main_Screen.route)
+                       }else{
+                           navController.navigate(Screen.register.route)
+                       }
 
-               },context)
+
+                   },context)
+               }
+
            },
+           colors = ButtonDefaults.buttonColors(colorResource(R.color.DarkSlateGray)),
            modifier = Modifier
                .width(330.dp)
                .height(40.dp),
@@ -153,7 +198,9 @@ fun Login(
        ) {
            Text(
                text = "Log In",
-               fontWeight = FontWeight.Bold
+               fontWeight = FontWeight.Bold,
+               fontSize = 18.sp,
+               color = colorResource(R.color.BurlyWood)
            )
 
        }
@@ -164,10 +211,12 @@ fun Login(
 
        Text(
            text ="Forget Password?",
-           fontSize = 14.sp
+           fontSize = 18.sp,
+           color = colorResource(R.color.BurlyWood),
+           fontWeight = FontWeight.ExtraBold
            )
 
-       Spacer(modifier = Modifier.weight(0.7f))
+       Spacer(modifier = Modifier.weight(0.3f))
 
        Button(
            onClick = {
@@ -177,17 +226,20 @@ fun Login(
                .width(330.dp)
                .height(40.dp),
            shape = RoundedCornerShape(30.dp),
-           contentPadding = ButtonDefaults.ContentPadding
+           contentPadding = ButtonDefaults.ContentPadding,
+           colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateGray))
 
        ) {
            Text(
                text = "Create new account",
-               fontWeight = FontWeight.Bold
+               fontWeight = FontWeight.Bold,
+               fontSize = 18.sp,
+               color = colorResource(R.color.BurlyWood)
            )
 
        }
 
-       Spacer(modifier = Modifier.weight(0.2f))
+       Spacer(modifier = Modifier.weight(0.4f))
 
    }
 

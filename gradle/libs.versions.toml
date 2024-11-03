@@ -1,5 +1,6 @@
 [versions]
 agp = "8.6.1"
+firebaseBomVersion = "33.4.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -12,9 +13,20 @@ composeBom = "2024.04.01"
 firebaseDatabase = "21.0.0"
 firebaseAuthKtx = "23.0.0"
 firebaseBom= "32.8.1"
+lifecycleViewmodelCompose = "2.8.7"
+materialIconsExtended = "1.7.5"
+navigationCompose = "2.8.3"
+runtimeLivedata = "1.7.5"
+ui = "1.7.5"
+uiTooling = "1.7.5"
 [libraries]
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+androidx-material = { module = "androidx.compose.material:material", version.ref = "materialIconsExtended" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 firebase-bom = { group= "com.google.firebase",name = "firebase-bom",version.ref="firebaseBom"}
 firebase-analitics = { group = "com.google.firebase", name="firebase-analytics-ktx"}
+firebase-bom-v3340 = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
 google-firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +46,9 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -21,7 +21,9 @@ android {
             useSupportLibrary = true
         }
     }
-
+    defaultConfig {
+        vectorDrawables.useSupportLibrary = true
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -62,6 +64,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.firebase.database)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,12 +78,20 @@ dependencies {
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.analitics)
+
+
+    implementation (libs.androidx.material.icons.extended)
+
+    implementation( libs.ui)
+    implementation( libs.androidx.material)
+    implementation (libs.ui.tooling)
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
     //FireBase
-    implementation(platform("com.google.firebase:firebase-bom:33.4.0"))
+    implementation(platform(libs.firebase.bom.v3340))
     //Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.3")
+    implementation(libs.androidx.navigation.compose)
     //ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
     implementation("com.google.dagger:hilt-android:2.51.1")
 

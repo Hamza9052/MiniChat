@@ -1,7 +1,9 @@
 package com.example.loginscreen.UiHome
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,12 +14,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -29,15 +34,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.loginscreen.Event.UserEvent
 import com.example.loginscreen.Event.user
+import com.example.loginscreen.R
 import com.example.loginscreen.ViewModel.UserViewModel
 
 @Composable
@@ -54,15 +63,16 @@ fun Create_Account(
 
     Column(
         modifier = Modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(Color.DarkGray),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.weight(1.2f))
+        Spacer(modifier = Modifier.weight(0.9f))
         Image(
             imageVector = Icons.Filled.AccountCircle,
             contentDescription ="Logo",
-
+            colorFilter = ColorFilter.tint(colorResource(R.color.BurlyWood)),
             alignment = Alignment.Center,
             modifier = Modifier
                 .width(100.dp)
@@ -78,15 +88,25 @@ fun Create_Account(
                     loginId = it
                 )
             },label = {
-                Text(text = "UserName")
+                Text(
+                    text = "UserName",
+                    color = colorResource(R.color.BurlyWood),
+                    fontWeight = FontWeight.Light
+                )
             },
             modifier = Modifier.width(330.dp),
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
-            textStyle = TextStyle(color = Color.Black)
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colorResource(R.color.BurlyWood)
+            ),
+            textStyle = TextStyle(
+                color = colorResource(R.color.BurlyWood),
+                fontWeight = FontWeight.Bold
+            )
         )
 
-        Spacer(modifier = Modifier.weight(0.3f))
+        Spacer(modifier = Modifier.weight(0.1f))
 
         OutlinedTextField(
             value = user?.emial?:"",
@@ -95,12 +115,22 @@ fun Create_Account(
                     emial = it
                 )
             },label = {
-                Text(text = "Email")
+                Text(
+                    text = "Email",
+                    color = colorResource(R.color.BurlyWood),
+                    fontWeight = FontWeight.Light
+                )
             },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colorResource(R.color.BurlyWood)
+            ),
             modifier = Modifier.width(330.dp),
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
-            textStyle = TextStyle(color = Color.Black)
+            textStyle = TextStyle(
+                color = colorResource(R.color.BurlyWood),
+                fontWeight = FontWeight.Bold
+            )
         )
 
         Spacer(modifier = Modifier.weight(0.1f))
@@ -113,12 +143,22 @@ fun Create_Account(
                 )
 
             },label = {
-                Text(text = "Password")
+                Text(
+                    text = "Password",
+                    color = colorResource(R.color.BurlyWood),
+                    fontWeight = FontWeight.Light
+                )
             },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colorResource(R.color.BurlyWood)
+            ),
             modifier = Modifier.width(330.dp),
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
-            textStyle = TextStyle(color = Color.Black),
+            textStyle = TextStyle(
+                color = colorResource(R.color.BurlyWood),
+                fontWeight = FontWeight.Bold
+            ),
             visualTransformation = if (showPassword){
                 VisualTransformation.None
             }else{
@@ -128,16 +168,18 @@ fun Create_Account(
                 if (showPassword) {
                     IconButton(onClick = { showPassword = false }) {
                         Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "hide_password"
+                            imageVector = Icons.Filled.VisibilityOff,
+                            contentDescription = "hide_password",
+                            tint = colorResource(R.color.DarkSlateGray)
                         )
                     }
                 } else {
                     IconButton(
                         onClick = { showPassword = true }) {
                         Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "hide_password"
+                            imageVector = Icons.Filled.Visibility,
+                            contentDescription = "hide_password",
+                            tint = colorResource(R.color.BurlyWood)
                         )
                     }
                 }
@@ -149,32 +191,46 @@ fun Create_Account(
 
         Button(
             onClick = {
+                if (
+                    user.password.isEmpty() ||
+                    user.emial.isEmpty() ||
+                    user.password.isEmpty() && user.emial.isEmpty() ){
+                    Toast.makeText(
+                        navController.context,
+                        "password or email is empty!",
+                        Toast.LENGTH_SHORT).show().toString()
 
-                ViewModel.action(
-                    event = UserEvent.CreateAccount(user = user){state ->
-                        if (state){
-                            navController.navigate(Screen.Login.route)
-                        }
+                }else {
 
-                    },context
-                )
+                    ViewModel.action(
+                        event = UserEvent.CreateAccount(user = user) { state ->
+                            if (state) {
+                                navController.navigate(Screen.Login.route)
+                            }
+
+                        }, context
+                    )
+                }
             },
             modifier = Modifier
                 .width(330.dp)
                 .height(40.dp),
-            shape = RoundedCornerShape(30.dp)
+            shape = RoundedCornerShape(30.dp),
+            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateGray))
 
         ) {
             Text(
                 text = "Create Account",
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = colorResource(R.color.BurlyWood)
             )
 
         }
 
 
 
-        Spacer(modifier = Modifier.weight(0.1f))
+        Spacer(modifier = Modifier.weight(0.3f))
 
 
 
@@ -187,17 +243,20 @@ fun Create_Account(
                 .width(330.dp)
                 .height(40.dp),
             shape = RoundedCornerShape(30.dp),
-            contentPadding = ButtonDefaults.ContentPadding
+            contentPadding = ButtonDefaults.ContentPadding,
+            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateGray))
 
         ) {
             Text(
                 text = "Log In",
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = colorResource(R.color.BurlyWood)
             )
 
         }
 
-        Spacer(modifier = Modifier.weight(0.2f))
+        Spacer(modifier = Modifier.weight(0.7f))
 
     }
 }
