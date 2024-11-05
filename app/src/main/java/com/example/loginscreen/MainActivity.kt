@@ -5,6 +5,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -31,16 +41,69 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 NavHost(navController = navController, startDestination = Screen.Login.route){
-                        composable(Screen.Login.route){
+                        composable(
+                            Screen.Login.route,
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -1000 },
+                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                                )
+                            },
+                            popEnterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { -1000 },
+                                    animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                                )
+                            }
+                        ){
                             Login(  navController = navController,ViewModel,navController.context)
                         }
-                        composable(Screen.register.route){
+                        composable(
+                            Screen.register.route,
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { 1000 },
+                                    animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                                )
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { 1000 },
+                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                                )
+                            }
+                        ){
                             Create_Account( navController = navController,ViewModel,navController.context)
                         }
-                        composable(Screen.Main_Screen.route){
+                        composable(
+                            Screen.Main_Screen.route,
+                            enterTransition = {
+                                fadeIn(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing))
+                            },
+                            exitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -1000 },
+                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                                )
+                            }
+                        ){
                             MainScreen(viewModel = ViewModel,navController)
                         }
-                    composable("message/{first_name}") { backStackEntry ->
+                    composable(
+                        "message/{first_name}",
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) { backStackEntry ->
                         val userId = backStackEntry.arguments?.getString("first_name") ?: ""
                         MessageScreen(navController, ViewModel, userId) // Pass userId to MessageScreen
                     }

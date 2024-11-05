@@ -4,6 +4,7 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class UserViewModel() : ViewModel() {
 
@@ -61,6 +63,8 @@ class UserViewModel() : ViewModel() {
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
 
+    private val _SearchName = MutableLiveData("")
+    val SearchName: LiveData<String> get() = _SearchName
     init {
     GetMessage()
     }
@@ -72,9 +76,12 @@ class UserViewModel() : ViewModel() {
             fetchUserFirstName(userId)
         }
     }
-init {
+    init {
     userIds
-}
+    }
+
+
+
 
 
 
@@ -288,6 +295,42 @@ init {
             }
 
     }
+
+
+    /**
+     * this for search
+     * */
+
+
+    fun Search(names:String,activ:Boolean){
+      if (activ) {
+
+          Log.e("search","$activ")
+      }else{
+          Log.e("search","${!activ}")
+          FirebaseFirestore.getInstance().collection("users").whereEqualTo("first_name", names)
+              .get()
+              .addOnSuccessListener { querySnapshot ->
+
+                  val name = querySnapshot.documents.first()
+                  if(!querySnapshot.isEmpty) {
+
+                      if (names.contains(name.getString("first_name") ?: "")) {
+                          _SearchName.value = name.getString("first_name") ?: ""
+                      }
+
+                  }else{
+                      _SearchName.value =""
+                  }
+
+              }
+      }
+
+
+
+    }
+
+
 
 
     /**
