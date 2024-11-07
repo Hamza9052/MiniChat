@@ -1,4 +1,4 @@
-package com.example.loginscreen.UiHome
+package com.hamza.test.UiHome
 
 
 import android.annotation.SuppressLint
@@ -28,8 +28,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,15 +48,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.loginscreen.R
-import com.example.loginscreen.ViewModel.UserViewModel
+import com.hamza.test.R
+import com.hamza.test.ViewModel.UserViewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.KeyboardType
-import com.example.loginscreen.Constants
+import com.hamza.test.Constants
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,16 +67,20 @@ fun MessageScreen(
     userId: String,
 
     ){
-     viewModel.GetMessage()
+
 
     val Message:String by viewModel.message.observeAsState(initial = "")
     val Messages:List<Map<String,Any>> by viewModel.messages.observeAsState(
         initial = emptyList<Map<String,Any>>().toMutableList()
     )
+
     LaunchedEffect(userId) {
-        viewModel.fetchUserFirstName(userId) // Ensure this fetches the correct name
+        viewModel.fetchUserFirstName(userId)
+        viewModel.GetMessage(userId)
     }
-    val firstName by viewModel.usd.observeAsState("")
+
+    val firstName by viewModel.usd.observeAsState(userId)
+
 
     Scaffold(
 
@@ -83,7 +89,7 @@ fun MessageScreen(
             CenterAlignedTopAppBar(
 
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = colorResource(R.color.DarkSlateGray),
+                    containerColor = colorResource(R.color.DarkSlateBlue),
                     titleContentColor = colorResource(R.color.White),
                 ),
                 title = {
@@ -153,6 +159,7 @@ fun MessageScreen(
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text
                     ),
+                    colors =  OutlinedTextFieldDefaults.colors(colorResource(R.color.DarkSlateBlue)),
                     value = Message,
                     onValueChange ={
                         viewModel.updateMessage(it)
@@ -161,7 +168,7 @@ fun MessageScreen(
                         Text(
                             "Message",
                             textAlign = TextAlign.Center,
-                            color = Color.Black
+                            color = Color.White
                         ) },
                     modifier = Modifier
                         .fillMaxSize()
@@ -169,17 +176,20 @@ fun MessageScreen(
                             bottom = 15.dp),
                     singleLine = true,
                     shape = RoundedCornerShape(30.dp),
-                    textStyle = TextStyle(color = Color.Black),
+                    textStyle = TextStyle(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    ),
 
                     trailingIcon = {
                         IconButton(onClick = {
-                            viewModel.NewMessage()
+                            viewModel.NewMessage(firstName)
                         }) {
                             Icon(
                                 imageVector = Icons.Filled.Send,
                                 contentDescription = "Search",
                                 modifier = Modifier.size(20.dp),
-                                tint = Color.Black
+                                tint = colorResource(R.color.BurlyWood)
 
                             )
                         }
@@ -205,19 +215,19 @@ fun messageUser1(
         shape = RoundedCornerShape(10.dp),
         colors = CardColors(
              contentColor =   if(!isCurrentUser)
-                 colorResource(R.color.DarkSlateGray)
+                 colorResource(R.color.DarkSlateBlue)
              else
                  colorResource(R.color.BurlyWood),
             containerColor =if(!isCurrentUser)
-                colorResource(R.color.DarkSlateGray)
+                colorResource(R.color.DarkSlateBlue)
             else
                 colorResource(R.color.BurlyWood),
             disabledContainerColor = if(!isCurrentUser)
-                colorResource(R.color.DarkSlateGray)
+                colorResource(R.color.DarkSlateBlue)
             else
                 colorResource(R.color.BurlyWood),
             disabledContentColor = if(!isCurrentUser)
-                colorResource(R.color.DarkSlateGray)
+                colorResource(R.color.DarkSlateBlue)
             else
                 colorResource(R.color.BurlyWood)
 
@@ -239,7 +249,7 @@ fun messageUser1(
             if (!isCurrentUser)
                 colorResource(R.color.BurlyWood)
             else
-                colorResource(R.color.DarkSlateGray)
+                colorResource(R.color.DarkSlateBlue)
 
 
         )

@@ -1,4 +1,4 @@
-package com.example.loginscreen
+package com.hamza.test
 
 object Constants {
     const val TAG = "flash-chat"

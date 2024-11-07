@@ -1,4 +1,4 @@
-package com.example.loginscreen.Event
+package com.hamza.test.Event
 
 data class user(
     var loginId:String= "",

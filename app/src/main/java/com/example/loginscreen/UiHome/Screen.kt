@@ -1,4 +1,4 @@
-package com.example.loginscreen.UiHome
+package com.hamza.test.UiHome
 
 sealed class Screen(val route:String) {
     object Login:Screen("login")

@@ -1,4 +1,4 @@
-package com.example.loginscreen.Event
+package com.hamza.test.Event
 
 import android.content.Context
 

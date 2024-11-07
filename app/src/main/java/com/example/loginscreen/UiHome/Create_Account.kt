@@ -1,14 +1,16 @@
-package com.example.loginscreen.UiHome
+package com.hamza.test.UiHome
 
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -44,10 +46,15 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.loginscreen.Event.UserEvent
-import com.example.loginscreen.Event.user
-import com.example.loginscreen.R
-import com.example.loginscreen.ViewModel.UserViewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.hamza.test.Event.UserEvent
+import com.hamza.test.Event.user
+import com.hamza.test.R
+import com.hamza.test.ViewModel.UserViewModel
 
 @Composable
 fun Create_Account(
@@ -64,25 +71,34 @@ fun Create_Account(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.DarkGray),
+            .background(colorResource(R.color.BurlyWood)),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(0.9f))
-        Image(
-            imageVector = Icons.Filled.AccountCircle,
-            contentDescription ="Logo",
-            colorFilter = ColorFilter.tint(colorResource(R.color.BurlyWood)),
-            alignment = Alignment.Center,
-            modifier = Modifier
-                .width(100.dp)
-                .height(100.dp)
-        )
+        Box (contentAlignment = Alignment.Center){
+            val composition by rememberLottieComposition(
+                LottieCompositionSpec.RawRes(
+                    R.raw.create
+                )
+            )
+            val preloaderProgress by animateLottieCompositionAsState(
+                composition,
+                iterations = LottieConstants.IterateForever,
+                isPlaying = true
+            )
+            LottieAnimation(
+                composition = composition,
+                progress = preloaderProgress,
+                modifier = Modifier.size(200.dp).align(Alignment.Center)
+            )
+
+        }
 
         Spacer(modifier = Modifier.weight(0.3f))
 
         OutlinedTextField(
-            value = user?.loginId?:"",
+            value = user.loginId ,
             onValueChange ={
                 user = user.copy(
                     loginId = it
@@ -90,7 +106,7 @@ fun Create_Account(
             },label = {
                 Text(
                     text = "UserName",
-                    color = colorResource(R.color.BurlyWood),
+                    color = colorResource(R.color.DarkSlateBlue),
                     fontWeight = FontWeight.Light
                 )
             },
@@ -98,10 +114,10 @@ fun Create_Account(
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colorResource(R.color.BurlyWood)
+                focusedBorderColor = colorResource(R.color.DarkSlateBlue)
             ),
             textStyle = TextStyle(
-                color = colorResource(R.color.BurlyWood),
+                color = colorResource(R.color.DarkSlateBlue),
                 fontWeight = FontWeight.Bold
             )
         )
@@ -109,7 +125,7 @@ fun Create_Account(
         Spacer(modifier = Modifier.weight(0.1f))
 
         OutlinedTextField(
-            value = user?.emial?:"",
+            value = user.emial ,
             onValueChange ={
                 user = user.copy(
                     emial = it
@@ -117,18 +133,18 @@ fun Create_Account(
             },label = {
                 Text(
                     text = "Email",
-                    color = colorResource(R.color.BurlyWood),
+                    color = colorResource(R.color.DarkSlateBlue),
                     fontWeight = FontWeight.Light
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colorResource(R.color.BurlyWood)
+                focusedBorderColor = colorResource(R.color.DarkSlateBlue)
             ),
             modifier = Modifier.width(330.dp),
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
             textStyle = TextStyle(
-                color = colorResource(R.color.BurlyWood),
+                color = colorResource(R.color.Black),
                 fontWeight = FontWeight.Bold
             )
         )
@@ -136,7 +152,7 @@ fun Create_Account(
         Spacer(modifier = Modifier.weight(0.1f))
 
         OutlinedTextField(
-            value = user?.password?: "",
+            value = user.password ,
             onValueChange ={
                 user = user.copy(
                     password = it
@@ -145,18 +161,18 @@ fun Create_Account(
             },label = {
                 Text(
                     text = "Password",
-                    color = colorResource(R.color.BurlyWood),
+                    color = colorResource(R.color.DarkSlateBlue),
                     fontWeight = FontWeight.Light
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colorResource(R.color.BurlyWood)
+                focusedBorderColor = colorResource(R.color.DarkSlateBlue)
             ),
             modifier = Modifier.width(330.dp),
             singleLine = true,
             shape = RoundedCornerShape(15.dp),
             textStyle = TextStyle(
-                color = colorResource(R.color.BurlyWood),
+                color = colorResource(R.color.Black),
                 fontWeight = FontWeight.Bold
             ),
             visualTransformation = if (showPassword){
@@ -170,7 +186,7 @@ fun Create_Account(
                         Icon(
                             imageVector = Icons.Filled.VisibilityOff,
                             contentDescription = "hide_password",
-                            tint = colorResource(R.color.DarkSlateGray)
+                            tint = colorResource(R.color.HotPink)
                         )
                     }
                 } else {
@@ -179,7 +195,7 @@ fun Create_Account(
                         Icon(
                             imageVector = Icons.Filled.Visibility,
                             contentDescription = "hide_password",
-                            tint = colorResource(R.color.BurlyWood)
+                            tint = colorResource(R.color.DarkSlateBlue)
                         )
                     }
                 }
@@ -216,7 +232,7 @@ fun Create_Account(
                 .width(330.dp)
                 .height(40.dp),
             shape = RoundedCornerShape(30.dp),
-            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateGray))
+            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateBlue))
 
         ) {
             Text(
@@ -244,7 +260,7 @@ fun Create_Account(
                 .height(40.dp),
             shape = RoundedCornerShape(30.dp),
             contentPadding = ButtonDefaults.ContentPadding,
-            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateGray))
+            colors = ButtonDefaults.buttonColors( colorResource(R.color.DarkSlateBlue))
 
         ) {
             Text(

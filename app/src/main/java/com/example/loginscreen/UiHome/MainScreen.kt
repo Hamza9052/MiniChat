@@ -1,8 +1,8 @@
-package com.example.loginscreen.UiHome
+package com.hamza.test.UiHome
 
 import android.annotation.SuppressLint
-import android.app.LauncherActivity
 import android.util.Log
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -49,11 +51,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.loginscreen.Event.user
-import com.example.loginscreen.R
-import com.example.loginscreen.ViewModel.UserViewModel
+import com.hamza.test.Event.user
+import com.hamza.test.R
+import com.hamza.test.ViewModel.UserViewModel
+import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.android.scopes.ViewScoped
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -62,43 +66,44 @@ import kotlinx.coroutines.flow.StateFlow
 @Composable
 fun MainScreen(
     viewModel: UserViewModel,
-    navController: NavController
-){
-    val search by remember { mutableStateOf(user().search) }
+    navController: NavController,
+) {
     val active by remember { mutableStateOf(false) }
 
 
-        Spacer(modifier = Modifier.height(70.dp))
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .background(Color.DarkGray)
 
-        ) {
-            Searchbar(active,viewModel,navController)
+    Spacer(modifier = Modifier.height(70.dp))
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .background(Color.DarkGray)
 
-            Spacer(modifier = Modifier.height(15.dp))
-            LazyColumn(Modifier.fillMaxSize()) {
-                items(viewModel.userlist.value.size) {item->
+    ) {
 
-                    val user = viewModel.userlist.value.get(item)
-                    if (viewModel.name == user ){
+            Searchbar(active, viewModel, navController)
 
-                    }else{
-                        listItem(user, navController)
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+
+
+        Spacer(modifier = Modifier.height(15.dp))
+        LazyColumn(Modifier.fillMaxSize()) {
+            items(viewModel.userlist.value.size) { item ->
+
+                val user = viewModel.userlist.value[item]
+                if (viewModel.name == user) {
+                    Log.e("test id for saga ",user)
+                } else {
+                    listItem(user, navController)
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
 
 
-
-
-
-
-        }}
+    }
+}
 
 
 //@Composable
@@ -108,35 +113,36 @@ fun MainScreen(
 //
 //}
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Searchbar(
-    active:Boolean,
+    active: Boolean,
     viewModel: UserViewModel,
-    navController: NavController
-){
+    navController: NavController,
+) {
 
     val user = user()
     var actives by remember { mutableStateOf(active) }
-    var isClick = false
-    val name by viewModel.SearchName.observeAsState("")
     var search by remember { mutableStateOf(user.search) }
     SearchBar(
-        query =search,
+        query = search,
         modifier = Modifier.fillMaxWidth(),
         colors = SearchBarDefaults.colors(colorResource(R.color.Gray)),
-        onQueryChange ={ search = it } ,
-        onSearch ={} ,
-        active = actives ,
-        onActiveChange ={actives = it  } ,
-        placeholder = { Text(
-            text = "Search",
-            color = colorResource(R.color.BurlyWood),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium
-        ) },
-        leadingIcon ={
-            (if (actives) Icons.Filled.Close else  null)?.let {
+        onQueryChange = { search = it },
+        onSearch = {},
+        active = actives,
+        onActiveChange = { actives = it },
+        placeholder = {
+            Text(
+                text = "Search",
+                color = colorResource(R.color.BurlyWood),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            )
+        },
+        leadingIcon = {
+            (if (actives) Icons.Filled.Close else null)?.let {
                 IconButton(onClick = { navController.navigate(Screen.Main_Screen.route) }) {
                     Icon(
                         imageVector = it,
@@ -148,11 +154,10 @@ fun Searchbar(
                 }
 
             }
-                     },
+        },
         trailingIcon = {
-            if (search.isNotEmpty())  {
 
-                IconButton(onClick = { viewModel.Search(search,!isClick) }) {
+
                     Icon(
                         imageVector = Icons.Filled.Search,
                         contentDescription = "Search",
@@ -160,64 +165,73 @@ fun Searchbar(
                         tint = colorResource(R.color.BurlyWood)
 
                     )
-                    isClick = true
-                }
 
-            }else{
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Search",
-                    modifier = Modifier.size(20.dp),
-                    tint = colorResource(R.color.BurlyWood)
 
-                )
-            }
+
 
         }
     ) {
 
-        if (isClick == true) {
-            Log.d("search card","this problem")
-            Card(
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                colors = CardColors(
-                    contentColor = colorResource(R.color.DarkSlateGray),
-                    containerColor = colorResource(R.color.DarkSlateGray),
-                    disabledContentColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ), onClick = {
-                    navController.navigate("message/$name")
-                }
-            ) {
-                Text(
-                    text = name,
-                    fontSize = 20.sp,
-                    color = colorResource(R.color.BurlyWood),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }else{
+        val size = viewModel.userlist.value.size
 
+        for (i in 0 until size) {
+
+            val users = viewModel.userlist.value.get(i)
+            for (i in 0 until users.length) {
+            if (
+                users.contains(search) &&
+                search.isNotEmpty() &&
+                !viewModel.name.equals(users)
+                ) {
+                LazyColumn {
+                    item {
+                        searchName(navController, users)
+                    }
+                }
+                break
+            }
+            }
         }
 
     }
+}
+
+
+@Composable
+fun searchName(
+    navController: NavController,
+    name: String,
+) {
+    Card(
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth(),
+        colors = CardColors(
+            contentColor = colorResource(R.color.DarkSlateBlue),
+            containerColor = colorResource(R.color.DarkSlateBlue),
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ), onClick = {
+            navController.navigate("message/$name")
+        }
+    ) {
+        Text(
+            text = name,
+            fontSize = 20.sp,
+            color = colorResource(R.color.BurlyWood),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(16.dp)
+        )
     }
-
-
-
-
-
-
+}
 
 
 @Composable
 fun listItem(
     name: String,
-    navController: NavController
+    navController: NavController,
+
 ) {
 
     Row(
@@ -230,13 +244,14 @@ fun listItem(
                 .fillMaxSize(),
             shape = RoundedCornerShape(30.dp),
             colors = CardColors(
-                contentColor = colorResource(R.color.DarkSlateGray),
-                containerColor = colorResource(R.color.DarkSlateGray),
+                contentColor = colorResource(R.color.DarkSlateBlue),
+                containerColor = colorResource(R.color.DarkSlateBlue),
                 disabledContentColor = Color.Transparent,
                 disabledContainerColor = Color.Transparent
             ),
             onClick = {
                 navController.navigate("message/$name")
+
             }
         ) {
 

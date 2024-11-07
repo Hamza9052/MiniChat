@@ -3,16 +3,16 @@ plugins {
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
     id("com.google.gms.google-services")
+
 }
 
 android {
-    namespace = "com.example.loginscreen"
+    namespace = "com.hamza.test"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.loginscreen"
+        applicationId = "com.hamza.test"
         minSdk = 24
-        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -22,6 +22,7 @@ android {
         }
     }
     defaultConfig {
+        targetSdk = 34
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
@@ -55,15 +56,14 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
+
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.auth.ktx)
+
     implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,27 +73,34 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.kotlinx.serialization.json)
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.google.firebase.firestore.ktx)
-    implementation(libs.firebase.storage.ktx)
-    implementation(libs.firebase.auth.ktx)
-    implementation(libs.firebase.analitics)
 
+    implementation(libs.google.firebase.firestore.ktx)
+
+    implementation(libs.lottie.compose)
 
     implementation (libs.androidx.material.icons.extended)
-
+    implementation (libs.play.services.measurement.api)
     implementation( libs.ui)
     implementation( libs.androidx.material)
     implementation (libs.ui.tooling)
-    implementation (libs.androidx.lifecycle.viewmodel.compose)
+
     //FireBase
     implementation(platform(libs.firebase.bom.v3340))
+    implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.database)
+    implementation (libs.firebase.analytics)
+    implementation(platform(libs.firebase.bom))
     //Navigation
     implementation(libs.androidx.navigation.compose)
     //ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.hilt.android)
+    implementation ("com.google.firebase:firebase-firestore:25.1.1")
+    implementation (libs.play.services.measurement.api)
 
-    implementation("com.google.dagger:hilt-android:2.51.1")
+
 
 
 
