@@ -2,36 +2,31 @@ package com.hamza.test.ViewModel
 
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hamza.test.Constants
 import com.hamza.test.Event.UserEvent
 import com.hamza.test.Event.user
 import com.hamza.test.UiHome.Screen
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.builtins.serializer
 
 class UserViewModel() : ViewModel() {
 
@@ -42,7 +37,7 @@ class UserViewModel() : ViewModel() {
         when(event){
             is UserEvent.Login -> Logins(event.user,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
-
+            is UserEvent.signOut -> signout(event.state,context)
         }
 
     }
@@ -124,7 +119,7 @@ class UserViewModel() : ViewModel() {
                             "Authentication failed.",
                             Toast.LENGTH_SHORT,
                         ).show()
-                        state(false)
+
                     }
                 }
 
@@ -136,21 +131,14 @@ class UserViewModel() : ViewModel() {
     * */
     private fun Logins(User: user, state: (state: Boolean) -> Unit, context: Context) {
 
-
-
             if (user != null ){
 
-                FirebaseAuth.getInstance().signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
+                Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
                         task->
                     if (task.isSuccessful) {
                         // Sign in success, update UI with the signed-in user's information
                         Log.d(TAG, "Login:success")
                         state(true)
-
-
-
-
-
                                 FirebaseFirestore.getInstance()
                                     .collection("users").document(task.result.user?.uid!!).get()
                                     .addOnSuccessListener { document ->
@@ -181,11 +169,50 @@ class UserViewModel() : ViewModel() {
                     "The Account doesn't excited ",
                     Toast.LENGTH_SHORT,
                 ).show()
+                Log.d("logout logging", "Login:$user")
+
             }
 
 
 
     }
+
+
+
+    /**
+     *this function  for signOut
+     * */
+
+    private fun signout(state: (state: Boolean) -> Unit, context: Context) {
+        if (user != null ) {
+            Log.e("logout", "im here")
+            user.getIdToken(true).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val token = task.result?.token
+                    // Save the token to SharedPreferences
+                    val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                    sharedPreferences.edit().putString("user_token", token).apply()
+                } else {
+                    Log.e("TokenError", "Failed to get token before sign-out")
+                }
+            }
+
+            Firebase.auth.signOut()
+            state(true)
+        }else{
+            Toast.makeText(
+                context,
+                "The Account doesn't excited ",
+                Toast.LENGTH_SHORT,
+            ).show()
+            Log.d("logout logging", "Login:$user")
+
+        }
+
+
+
+    }
+
 
 
     /**
@@ -272,13 +299,19 @@ class UserViewModel() : ViewModel() {
 
     fun NewMessage(username:String){
         val message:String = _message.value ?: throw IllegalArgumentException("Message empty")
-
+        val collection1 = username + name
+        val collection2 = name + username
         viewModelScope.launch {
-            val collection1 = Firebase.firestore.collection(Constants.MESSAGES).document("allmessage")
+            val collectiona = Firebase.firestore.collection(Constants.MESSAGES).document("allmessage").collection(collection2)
 
             if (message.isNotEmpty()) {
 
-                collection1.collection(username+name).document().set(
+                collectiona.get().addOnSuccessListener {snap->
+                    val finalcollection = if(!snap.isEmpty) collection2 else collection1
+
+                    Firebase.firestore.collection(Constants.MESSAGES)
+                        .document("allmessage").collection(finalcollection)
+                        .document().set(
 
                         hashMapOf(
                             Constants.MESSAGE to message,
@@ -286,8 +319,9 @@ class UserViewModel() : ViewModel() {
                             Constants.SENT_ON to System.currentTimeMillis()
                         )
 
-                ).addOnSuccessListener {
-                    _message.value = ""
+                    ).addOnSuccessListener {
+                        _message.value = ""
+                    }
                 }
             }
         }
@@ -298,19 +332,19 @@ class UserViewModel() : ViewModel() {
    * this message for get message
    * */
 
-    fun GetMessage(us:String){
+    fun GetMessage(username:String){
         viewModelScope.launch {
         Firebase.firestore
             .collection(Constants.MESSAGES)
             .document("allmessage")
-            .collection(name+us )
+            .collection(name+username)
             .get().addOnSuccessListener{sanphot->
 
 
 
                 if (sanphot.isEmpty){
                     Firebase.firestore.collection(Constants.MESSAGES)
-                        .document("allmessage").collection(us+name)
+                        .document("allmessage").collection(username+name)
                         .orderBy(Constants.SENT_ON)
                         .addSnapshotListener{value , e ->
                             if (e != null){
@@ -325,7 +359,7 @@ class UserViewModel() : ViewModel() {
 
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
-                                    if (nams != null && nams == name || nams == us){
+                                    if (nams != null && nams == name || nams == username){
                                         val data = doc.data
                                         data?.set(Constants.IS_CURRENT_USER,
                                             name == data[Constants.SENT_BY].toString()
@@ -349,12 +383,11 @@ class UserViewModel() : ViewModel() {
                         }
 
 
-            }
+            } else{
 
 
-                else{
                     Firebase.firestore.collection(Constants.MESSAGES)
-                        .document("allmessage").collection(name+us)
+                        .document("allmessage").collection(name+username)
                         .orderBy(Constants.SENT_ON)
                         .addSnapshotListener{value , e ->
                             if (e != null){
@@ -371,7 +404,7 @@ class UserViewModel() : ViewModel() {
 
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
-                                    if (nams != null && nams == name || nams == us){
+                                    if (nams != null && nams == name || nams == username){
                                         val data = doc.data
                                         data?.set(Constants.IS_CURRENT_USER,
                                             name == data[Constants.SENT_BY].toString()

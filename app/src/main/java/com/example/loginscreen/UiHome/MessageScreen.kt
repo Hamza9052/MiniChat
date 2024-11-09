@@ -136,7 +136,8 @@ fun MessageScreen(
             horizontalAlignment = AbsoluteAlignment.Right
         ) {
             LazyColumn(
-                reverseLayout = true
+                reverseLayout = false,
+                userScrollEnabled = true,
             ) {
                 items(Messages.size) {index->
                     val message = Messages[index]
