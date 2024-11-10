@@ -89,7 +89,7 @@ fun MainScreen(
                        AlertDialogSingOut(
                            onDismissRequest = { showDialog.value = false },
                            onConfirmation = {viewModel.action(
-                               UserEvent.signOut() {state->
+                               UserEvent.signOut(user()) {state->
                                    if (state){
                                        showDialog.value = false
                                        navController.navigate(Screen.Login.route)
@@ -104,10 +104,10 @@ fun MainScreen(
 
 
 
-            Spacer(modifier = Modifier.height(15.dp))
+
             LazyColumn(Modifier.fillMaxSize()) {
                 items(viewModel.userlist.value.size) { item ->
-
+                    Spacer(modifier = Modifier.height(15.dp))
                     val user = viewModel.userlist.value[item]
                     if (viewModel.name == user) {
                         Log.e("test id for saga ", user)
@@ -115,7 +115,7 @@ fun MainScreen(
                         listItem(user, navController)
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+
                 }
             }
 
@@ -158,7 +158,7 @@ fun MainScreen(
                 modifier = Modifier
                     .weight(1f) // Occupy available width but leave space for IconButton
                     .padding(end = if (actives) 0.dp else 8.dp),
-                colors = SearchBarDefaults.colors(colorResource(R.color.Gray)),
+                colors = SearchBarDefaults.colors(containerColor =colorResource(R.color.DimGray)),
                 onQueryChange = { search = it },
                 onSearch = {},
                 active = actives,
@@ -196,59 +196,61 @@ fun MainScreen(
                 }
             ) {
 
-                val size = viewModel.userlist.value.size
 
-                for (i in 0 until size) {
+                    val size = viewModel.userlist.value.size
 
-                    val users = viewModel.userlist.value.get(i)
-                    for (i in 0 until users.length) {
-                        if (
-                            users.contains(search) &&
-                            search.isNotEmpty() &&
-                            !viewModel.name.equals(users)
-                        ) {
-                            LazyColumn {
-                                item {
-                                    searchName(navController, users)
+                    for (i in 0 until size) {
+
+                        val users = viewModel.userlist.value.get(i)
+                        for (i in 0 until users.length) {
+                            if (
+                                users.contains(search) &&
+                                search.isNotEmpty() &&
+                                !viewModel.name.equals(users)
+                            ) {
+                                LazyColumn {
+                                    item {
+                                        searchName(navController, users)
+                                    }
                                 }
+                                break
                             }
-                            break
                         }
                     }
+
                 }
+                if (actives){
 
-            }
-            if (actives){
-
-            }else{
-                Card(
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(top = 33.dp)
-                        .size(45.dp)
-                        .clickable { showDialog.value = true },
-                    shape = RoundedCornerShape(50.dp),
-                    colors = CardDefaults.cardColors(colorResource(R.color.BurlyWood))
-                ) {
-                    IconButton(
-                        onClick = { showDialog.value = true},
+                }else{
+                    Card(
                         modifier = Modifier
+                            .padding(top = 33.dp)
                             .size(45.dp)
-
+                            .clickable { showDialog.value = true },
+                        shape = RoundedCornerShape(50.dp),
+                        colors = CardDefaults.cardColors(colorResource(R.color.BurlyWood))
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = "Search",
-                            modifier = Modifier.size(30.dp) ,
-                            tint = colorResource(R.color.DarkSlateBlue)
+                        IconButton(
+                            onClick = { showDialog.value = true},
+                            modifier = Modifier
+                                .size(45.dp)
 
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Search",
+                                modifier = Modifier.size(30.dp) ,
+                                tint = colorResource(R.color.DarkSlateBlue)
 
+                            )
+
+                        }
                     }
+
+                }}
+
                 }
 
-        }
-    }
 
 
 
@@ -260,7 +262,8 @@ fun MainScreen(
 
 
 
-}
+
+
 
 
 

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -127,77 +128,84 @@ fun MessageScreen(
             )
         })
     { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(Color.DarkGray),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = AbsoluteAlignment.Right
-        ) {
-            LazyColumn(
-                reverseLayout = false,
-                userScrollEnabled = true,
+
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .background(Color.DarkGray),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = AbsoluteAlignment.Right
             ) {
-                items(Messages.size) {index->
-                    val message = Messages[index]
-                    val isCurrentUser = message[Constants.IS_CURRENT_USER] as Boolean
-                    messageUser1(
-                        message =  message[Constants.MESSAGE].toString(),
-                        isCurrentUser = isCurrentUser
-                    )
-                    Spacer(modifier = Modifier.height(5.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    reverseLayout = true,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    items(Messages.size) { index ->
+                        val message = Messages[index]
+                        val isCurrentUser = message[Constants.IS_CURRENT_USER] as Boolean
+                        messageUser1(
+                            message = message[Constants.MESSAGE].toString(),
+                            isCurrentUser = isCurrentUser
+                        )
+                        Spacer(modifier = Modifier.height(5.dp))
+                    }
+
                 }
 
-
-            }
-            Row (
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier.height(85.dp)
-            ) {
-                OutlinedTextField(
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text
-                    ),
-                    colors =  OutlinedTextFieldDefaults.colors(colorResource(R.color.DarkSlateBlue)),
-                    value = Message,
-                    onValueChange ={
-                        viewModel.updateMessage(it)
-                    },
-                    placeholder = {
-                        Text(
-                            "Message",
-                            textAlign = TextAlign.Center,
-                            color = Color.White
-                        ) },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 15.dp,
-                            bottom = 15.dp),
-                    singleLine = true,
-                    shape = RoundedCornerShape(30.dp),
-                    textStyle = TextStyle(
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    ),
-
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            viewModel.NewMessage(firstName)
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Send,
-                                contentDescription = "Search",
-                                modifier = Modifier.size(20.dp),
-                                tint = colorResource(R.color.BurlyWood)
-
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    OutlinedTextField(
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(colorResource(R.color.DarkSlateBlue)),
+                        value = Message,
+                        onValueChange = {
+                            viewModel.updateMessage(it)
+                        },
+                        placeholder = {
+                            Text(
+                                "Message",
+                                textAlign = TextAlign.Center,
+                                color = Color.White
                             )
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        singleLine = true,
+                        shape = RoundedCornerShape(30.dp),
+                        textStyle = TextStyle(
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        ),
+
+                        trailingIcon = {
+                            IconButton(onClick = {
+                                viewModel.NewMessage(firstName)
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Send,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = colorResource(R.color.BurlyWood)
+
+                                )
+                            }
                         }
-                    }
-                )
+                    )
+
+                }
+
             }
-        }
 
     }
 
