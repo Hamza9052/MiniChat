@@ -1,11 +1,11 @@
 package com.hamza.test.ViewModel
 
+import android.annotation.SuppressLint
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -13,20 +13,15 @@ import androidx.lifecycle.viewModelScope
 import com.hamza.test.Constants
 import com.hamza.test.Event.UserEvent
 import com.hamza.test.Event.user
-import com.hamza.test.UiHome.Screen
 import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.builtins.serializer
 
 class UserViewModel() : ViewModel() {
 
@@ -37,7 +32,7 @@ class UserViewModel() : ViewModel() {
         when(event){
             is UserEvent.Login -> Logins(event.user,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
-            is UserEvent.signOut -> signout(event.state,context)
+            is UserEvent.signOut -> signout(event.user,event.state,context)
         }
 
     }
@@ -46,21 +41,13 @@ class UserViewModel() : ViewModel() {
     val usd: LiveData<String> get() = _used
 
 
-    private val password = mutableMapOf<String,String>()
-    private val logId = mutableMapOf<String,String>()
-
-
-    private val user = Firebase.auth.currentUser
-
-
 
     private val firstNames = MutableStateFlow(mutableListOf<String>())
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
-
+    val ids = Firebase.auth.currentUser
     var name= ""
-
-
+   var id =""
 
 
     init {
@@ -76,15 +63,34 @@ class UserViewModel() : ViewModel() {
     }
 
 
+    fun isUserLoggedIn(context: Context): Boolean {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        return sharedPreferences.getBoolean("is_logged_in", false)
+    }
 
 
 
+    /**
+     *this function for save Login
+     * */
 
+   @SuppressLint("CommitPrefEdits")
+   private fun saveLoginState(
+        context: Context,
+        email: String,
+        password:String,
+        uid: String,
 
+    ) {
 
-
-
-
+            // Save email and UID in SharedPreferences
+            val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            sharedPreferences.edit()
+                .putString("user_email", email)
+                .putString("user_id", uid)
+                .putString("password",password)
+                .apply()
+    }
 
 
     /**
@@ -126,88 +132,89 @@ class UserViewModel() : ViewModel() {
     }
 
 
+
     /**
     *this function for login
     * */
+    @SuppressLint("SuspiciousIndentation")
     private fun Logins(User: user, state: (state: Boolean) -> Unit, context: Context) {
 
-            if (user != null ){
+        Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
+                task->
+            if (task.isSuccessful) {
+                // Sign in success, update UI with the signed-in user's information
+                Log.d(TAG, "Login:success")
 
-                Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
-                        task->
-                    if (task.isSuccessful) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d(TAG, "Login:success")
-                        state(true)
-                                FirebaseFirestore.getInstance()
-                                    .collection("users").document(task.result.user?.uid!!).get()
-                                    .addOnSuccessListener { document ->
+                val user = FirebaseAuth.getInstance().currentUser
+                saveLoginState(context,user?.email!!,task.result.user?.uid!!,User.password)
 
+                state(true)
 
-                                            name = document.getString("first_name").toString()
-
-                                    }
-
+                id = task.result.user?.uid!!
+                        FirebaseFirestore.getInstance()
+                            .collection("users").document(task.result.user?.uid!!).get()
+                            .addOnSuccessListener { document ->
 
 
+                                    name = document.getString("first_name").toString()
 
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Log.w(TAG, "Login:failure", task.exception)
-                        Toast.makeText(
-                            context,
-                            "Password or Email incorrect.",
-                            Toast.LENGTH_SHORT,
-                        ).show()
+                            }
 
 
-                    }
-                }
-            }else{
+
+
+            } else {
+                // If sign in fails, display a message to the user.
+                Log.w(TAG, "Login:failure", task.exception)
                 Toast.makeText(
                     context,
-                    "The Account doesn't excited ",
+                    "Password or Email incorrect.",
                     Toast.LENGTH_SHORT,
                 ).show()
-                Log.d("logout logging", "Login:$user")
+
 
             }
+        }
 
 
 
     }
 
+    fun retrieveUserInfoFromPreferences(context: Context): Pair<String?, String?> {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val email = sharedPreferences.getString("user_email", null)
+        val password = sharedPreferences.getString("password", null)
+        return Pair(email, password)
+    }
 
+     fun getlastUser(context: Context){
+        val (email, password) = retrieveUserInfoFromPreferences(context)
 
+        if (email != null && password != null) {
+            Firebase.auth.signInWithEmailAndPassword(email,password)
+            Log.d("LastUserInfo", "No previous user logged in")
+        } else {
+            Log.d("LastUserInfo", "No previous user logged in")
+        }
+    }
     /**
      *this function  for signOut
      * */
 
-    private fun signout(state: (state: Boolean) -> Unit, context: Context) {
-        if (user != null ) {
-            Log.e("logout", "im here")
-            user.getIdToken(true).addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val token = task.result?.token
-                    // Save the token to SharedPreferences
-                    val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                    sharedPreferences.edit().putString("user_token", token).apply()
-                } else {
-                    Log.e("TokenError", "Failed to get token before sign-out")
-                }
-            }
+    private fun signout(User:user,state: (state: Boolean) -> Unit, context: Context) {
 
+            Log.e("logout", "im here")
             Firebase.auth.signOut()
             state(true)
-        }else{
-            Toast.makeText(
-                context,
-                "The Account doesn't excited ",
-                Toast.LENGTH_SHORT,
-            ).show()
-            Log.d("logout logging", "Login:$user")
 
-        }
+
+            // Clear user data from SharedPreferences
+            val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            sharedPreferences.edit()
+                .remove("user_email")
+                .remove("user_id")
+                .apply()
+
 
 
 
@@ -222,11 +229,7 @@ class UserViewModel() : ViewModel() {
 
 
 
-            if (user == null) {
-                callbackFlow<Screen.Login> {
-                    Log.e("tag", "nothing")
-                }
-            } else {
+
 
                 FirebaseFirestore.getInstance().collection("users")
                     .get()
@@ -245,7 +248,7 @@ class UserViewModel() : ViewModel() {
 
 
                     }
-            }
+
 
 
     }

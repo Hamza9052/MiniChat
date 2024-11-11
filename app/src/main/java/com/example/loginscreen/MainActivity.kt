@@ -34,6 +34,8 @@ import com.hamza.test.ViewModel.UserViewModel
 import com.hamza.test.ui.theme.LoginScreenTheme
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.hamza.test.Event.UserEvent
+import com.hamza.test.Event.user
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -52,7 +54,8 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(islogin) {
                     if (ViewModel.ids != null){
                         ViewModel.retrieveUserInfoFromPreferences(navController.context)
-                        navController.navigate(Screen.Main_Screen.route)
+                        ViewModel.getlastUser(context = navController.context)
+
                     }else{
                         navController.navigate(Screen.Login.route)
                     }
