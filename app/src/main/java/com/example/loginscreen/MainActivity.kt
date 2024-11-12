@@ -19,9 +19,11 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Observer
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -47,15 +49,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+
             LoginScreenTheme {
 
                 val navController = rememberNavController()
-
-                LaunchedEffect(ViewModel.id) {
-                  ViewModel.check(navController.context,navController)
-
-
+                LaunchedEffect(key1 = "") {
+                    ViewModel.check(navController.context,navController)
                 }
+
 
                 NavHost(navController = navController, startDestination =   Screen.Login.route){
 

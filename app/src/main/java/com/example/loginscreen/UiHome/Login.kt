@@ -208,11 +208,9 @@ fun Login(
 
                }else{
                    ViewModel.action(UserEvent.Login(user){state->
-                       if (state){
+
                            navController.navigate(Screen.Main_Screen.route)
-                       }else{
-                           navController.navigate(Screen.register.route)
-                       }
+
 
 
                    },context)

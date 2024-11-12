@@ -1,6 +1,7 @@
 package com.hamza.test.ViewModel
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.SharedPreferences
@@ -22,6 +23,8 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.hamza.test.UiHome.Screen
+import dagger.hilt.android.internal.Contexts.getApplication
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,6 +40,7 @@ class UserViewModel() : ViewModel() {
             is UserEvent.Login -> Logins(event.user,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
             is UserEvent.signOut -> signout(event.user,event.state,context)
+
         }
 
     }
@@ -49,7 +53,6 @@ class UserViewModel() : ViewModel() {
     private val firstNames = MutableStateFlow(mutableListOf<String>())
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
-    val ids = Firebase.auth.currentUser
     var name= ""
    var id =""
 
@@ -58,6 +61,8 @@ class UserViewModel() : ViewModel() {
         users()
 
     }
+
+
     init {
             if (Firebase.auth.currentUser?.uid != null) {
                 fetchUserFirstName(Firebase.auth.currentUser?.uid!!)
@@ -75,14 +80,14 @@ class UserViewModel() : ViewModel() {
      * */
 
 
-
-    fun check(context: Context,navController: NavController) {
+        fun check(context: Context,navController: NavController) {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val check = sharedPreferences.getString("login","")
-
-
+        val email=sharedPreferences.getString("email","")
+        val password =sharedPreferences.getString("password","")
             if (check.equals("true")){
-                navController.navigate(Screen.Main_Screen.route)
+                Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
+               navController.navigate(Screen.Main_Screen.route)
             }else{
                 navController.navigate(Screen.Login.route)
             }
@@ -140,22 +145,22 @@ class UserViewModel() : ViewModel() {
                 // Sign in success, update UI with the signed-in user's information
                 Log.d(TAG, "Login:success")
 
-
-                val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                sharedPreferences.edit()
-                    .putString("login", "true")
-                    .apply()
+                id = task.result.user?.uid!!
 
                 state(true)
 
-                id = task.result.user?.uid!!
                         FirebaseFirestore.getInstance()
                             .collection("users").document(task.result.user?.uid!!).get()
                             .addOnSuccessListener { document ->
-
-
-                                    name = document.getString("first_name").toString()
-
+                                name = document.getString("first_name").toString()
+                                val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                                sharedPreferences.edit()
+                                    .putString("login", "true")
+                                    .putString("email",User.emial)
+                                    .putString("uid",id)
+                                    .putString("password",User.password)
+                                    .putString("name",name)
+                                    .apply()
                             }
 
 
@@ -192,7 +197,12 @@ class UserViewModel() : ViewModel() {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putString("login", "false")
+            .remove("")
+            .remove("email")
+            .remove("uid")
+            .remove("password")
             .apply()
+
     }
 
 
