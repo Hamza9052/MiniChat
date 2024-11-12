@@ -107,11 +107,12 @@ fun MainScreen(
 
             LazyColumn(Modifier.fillMaxSize()) {
                 items(viewModel.userlist.value.size) { item ->
-                    Spacer(modifier = Modifier.height(15.dp))
+
                     val user = viewModel.userlist.value[item]
                     if (viewModel.name == user) {
                         Log.e("test id for saga ", user)
                     } else {
+                        Spacer(modifier = Modifier.height(15.dp))
                         listItem(user, navController)
                     }
 

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.Checkbox
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Visibility
@@ -30,7 +32,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -177,9 +181,20 @@ fun Login(
        )
 
 
-       Spacer(modifier = Modifier.weight(0.1f))
+//       Spacer(modifier = Modifier.weight(0.2f))
 
-
+//      Row {
+//          val Checked = remember { mutableStateOf(false)}
+//          Checkbox(
+//             checked =Checked.value,
+//              onCheckedChange = {ischecked->
+//                  Checked.value = ischecked
+//
+//              },
+//
+//          )
+//      }
+       Spacer(modifier = Modifier.weight(0.2f))
        Button(
            onClick = {
                if (
@@ -222,14 +237,14 @@ fun Login(
 
 
 
-       Spacer(modifier = Modifier.weight(0.1f))
+//       Spacer(modifier = Modifier.weight(0.1f))
 
-       Text(
-           text ="Forget Password?",
-           fontSize = 18.sp,
-           color = colorResource(R.color.DarkSlateBlue),
-           fontWeight = FontWeight.ExtraBold
-           )
+//       Text(
+//           text ="Forget Password?",
+//           fontSize = 18.sp,
+//           color = colorResource(R.color.DarkSlateBlue),
+//           fontWeight = FontWeight.ExtraBold
+//           )
 
        Spacer(modifier = Modifier.weight(0.3f))
 

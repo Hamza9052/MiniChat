@@ -50,15 +50,11 @@ class MainActivity : ComponentActivity() {
             LoginScreenTheme {
 
                 val navController = rememberNavController()
-                val islogin = ViewModel.isUserLoggedIn(navController.context)
-                LaunchedEffect(islogin) {
-                    if (ViewModel.ids != null){
-                        ViewModel.retrieveUserInfoFromPreferences(navController.context)
-                        ViewModel.getlastUser(context = navController.context)
 
-                    }else{
-                        navController.navigate(Screen.Login.route)
-                    }
+                LaunchedEffect(ViewModel.id) {
+                  ViewModel.check(navController.context,navController)
+
+
                 }
 
                 NavHost(navController = navController, startDestination =   Screen.Login.route){

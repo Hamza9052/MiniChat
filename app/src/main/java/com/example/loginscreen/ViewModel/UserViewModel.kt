@@ -6,10 +6,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.hamza.test.Constants
 import com.hamza.test.Event.UserEvent
 import com.hamza.test.Event.user
@@ -18,6 +21,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.hamza.test.UiHome.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,10 +67,6 @@ class UserViewModel() : ViewModel() {
     }
 
 
-    fun isUserLoggedIn(context: Context): Boolean {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        return sharedPreferences.getBoolean("is_logged_in", false)
-    }
 
 
 
@@ -74,22 +74,20 @@ class UserViewModel() : ViewModel() {
      *this function for save Login
      * */
 
-   @SuppressLint("CommitPrefEdits")
-   private fun saveLoginState(
-        context: Context,
-        email: String,
-        password:String,
-        uid: String,
 
-    ) {
 
-            // Save email and UID in SharedPreferences
-            val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            sharedPreferences.edit()
-                .putString("user_email", email)
-                .putString("user_id", uid)
-                .putString("password",password)
-                .apply()
+    fun check(context: Context,navController: NavController) {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val check = sharedPreferences.getString("login","")
+
+
+            if (check.equals("true")){
+                navController.navigate(Screen.Main_Screen.route)
+            }else{
+                navController.navigate(Screen.Login.route)
+            }
+
+
     }
 
 
@@ -101,9 +99,6 @@ class UserViewModel() : ViewModel() {
            Firebase.auth.createUserWithEmailAndPassword(User.emial, User.password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
-
-
-
 
                         FirebaseFirestore.getInstance().collection("users").document(task.result.user?.uid!!)
                             .set(
@@ -145,8 +140,11 @@ class UserViewModel() : ViewModel() {
                 // Sign in success, update UI with the signed-in user's information
                 Log.d(TAG, "Login:success")
 
-                val user = FirebaseAuth.getInstance().currentUser
-                saveLoginState(context,user?.email!!,task.result.user?.uid!!,User.password)
+
+                val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                sharedPreferences.edit()
+                    .putString("login", "true")
+                    .apply()
 
                 state(true)
 
@@ -180,23 +178,7 @@ class UserViewModel() : ViewModel() {
 
     }
 
-    fun retrieveUserInfoFromPreferences(context: Context): Pair<String?, String?> {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val email = sharedPreferences.getString("user_email", null)
-        val password = sharedPreferences.getString("password", null)
-        return Pair(email, password)
-    }
 
-     fun getlastUser(context: Context){
-        val (email, password) = retrieveUserInfoFromPreferences(context)
-
-        if (email != null && password != null) {
-            Firebase.auth.signInWithEmailAndPassword(email,password)
-            Log.d("LastUserInfo", "No previous user logged in")
-        } else {
-            Log.d("LastUserInfo", "No previous user logged in")
-        }
-    }
     /**
      *this function  for signOut
      * */
@@ -206,18 +188,11 @@ class UserViewModel() : ViewModel() {
             Log.e("logout", "im here")
             Firebase.auth.signOut()
             state(true)
-
-
             // Clear user data from SharedPreferences
-            val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-            sharedPreferences.edit()
-                .remove("user_email")
-                .remove("user_id")
-                .apply()
-
-
-
-
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit()
+            .putString("login", "false")
+            .apply()
     }
 
 
