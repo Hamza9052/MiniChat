@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.androidx.material3)
 
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -100,8 +101,8 @@ dependencies {
     implementation(libs.hilt.android)
     implementation ("com.google.firebase:firebase-firestore:25.1.1")
     implementation (libs.play.services.measurement.api)
-
-
+    implementation("androidx.core:core-ktx:2.2.0")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")
 
 
 

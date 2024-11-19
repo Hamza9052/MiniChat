@@ -80,11 +80,12 @@ class UserViewModel() : ViewModel() {
      * */
 
 
-        fun check(context: Context,navController: NavController) {
+    @SuppressLint("SuspiciousIndentation")
+    fun check(context: Context, navController: NavController) {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val check = sharedPreferences.getString("login","")
         val email=sharedPreferences.getString("email","")
-        val password =sharedPreferences.getString("password","")
+        val password = sharedPreferences.getString("password","")
             if (check.equals("true")){
                 Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
                navController.navigate(Screen.Main_Screen.route)
