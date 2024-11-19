@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.hamza.test.UiHome.Screen
 import dagger.hilt.android.internal.Contexts.getApplication
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -105,12 +106,21 @@ class UserViewModel() : ViewModel() {
            Firebase.auth.createUserWithEmailAndPassword(User.emial, User.password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
+                        var token = ""
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
+                            if (task.isSuccessful){
+                                token = task.result
+                            }else{
+                                Log.e("FCM", "Failed to get FCM token", task.exception)
+                            }
+                        }
 
                         FirebaseFirestore.getInstance().collection("users").document(task.result.user?.uid!!)
                             .set(
                                 hashMapOf(
-                                 "password" to User.password,
-                                    "first_name" to User.loginId
+                                    "password" to User.password,
+                                    "first_name" to User.loginId,
+                                    "FcmToken" to token
                                 )
 
                             )
@@ -145,12 +155,10 @@ class UserViewModel() : ViewModel() {
             if (task.isSuccessful) {
                 // Sign in success, update UI with the signed-in user's information
                 Log.d(TAG, "Login:success")
-
                 id = task.result.user?.uid!!
-
                 state(true)
 
-                        FirebaseFirestore.getInstance()
+                FirebaseFirestore.getInstance()
                             .collection("users").document(task.result.user?.uid!!).get()
                             .addOnSuccessListener { document ->
                                 name = document.getString("first_name").toString()
@@ -166,10 +174,9 @@ class UserViewModel() : ViewModel() {
 
 
 
-
             } else {
                 // If sign in fails, display a message to the user.
-                Log.w(TAG, "Login:failure", task.exception)
+                Log.e(TAG, "Login:failure", task.exception)
                 Toast.makeText(
                     context,
                     "Password or Email incorrect.",
@@ -183,8 +190,8 @@ class UserViewModel() : ViewModel() {
 
 
     }
-
-
+    private fun setToken(){
+   }
     /**
      *this function  for signOut
      * */
@@ -213,10 +220,6 @@ class UserViewModel() : ViewModel() {
    * */
      fun users() {
 
-
-
-
-
                 FirebaseFirestore.getInstance().collection("users")
                     .get()
                     .addOnSuccessListener { result ->
@@ -228,17 +231,26 @@ class UserViewModel() : ViewModel() {
                                 firstNames.value.add(firs_name)
 
                             }
-
-
                         }
-
-
                     }
-
-
-
     }
 
+
+
+    fun getUserToken(name:String,callBack:(String?) -> Unit){
+        Firebase.firestore.collection("users")
+            .whereEqualTo("first_name",name)
+            .get()
+            .addOnSuccessListener{ document->
+                if (!document.isEmpty){
+                    val userDoc = document.first()
+                    val token = userDoc.getString("fcmToken")
+                    callBack(token)
+                }else{
+                    callBack(null)
+                }
+            }
+    }
 
   /**
   * this function for show all user on your main Screen
@@ -294,7 +306,6 @@ class UserViewModel() : ViewModel() {
             val collectiona = Firebase.firestore.collection(Constants.MESSAGES).document("allmessage").collection(collection2)
 
             if (message.isNotEmpty()) {
-
                 collectiona.get().addOnSuccessListener {snap->
                     val finalcollection = if(!snap.isEmpty) collection2 else collection1
 
