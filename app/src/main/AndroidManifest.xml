@@ -21,7 +21,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.LoginScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +29,16 @@
             </intent-filter>
 
         </activity>
+
+
+        <service
+            android:name="com.example.loginscreen.Notification.Message"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"/>

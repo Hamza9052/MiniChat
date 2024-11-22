@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -29,6 +30,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class UserViewModel() : ViewModel() {
@@ -96,6 +98,7 @@ class UserViewModel() : ViewModel() {
 
 
     }
+    private var token = MutableStateFlow("")
 
 
     /**
@@ -103,24 +106,25 @@ class UserViewModel() : ViewModel() {
     * */
     private fun CreateAccount(User: user, state: (state: Boolean) -> Unit, context: Context) {
 
+        FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
+            if (task.isSuccessful){
+                token.update {task.result.toString()}
+
+                Log.d("token success", "CreateAccount: $token")
+            }
+        }
+
            Firebase.auth.createUserWithEmailAndPassword(User.emial, User.password)
                 .addOnCompleteListener { task ->
+
                     if (task.isSuccessful) {
-                        var token = ""
-                        FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
-                            if (task.isSuccessful){
-                                token = task.result
-                            }else{
-                                Log.e("FCM", "Failed to get FCM token", task.exception)
-                            }
-                        }
 
                         FirebaseFirestore.getInstance().collection("users").document(task.result.user?.uid!!)
                             .set(
                                 hashMapOf(
                                     "password" to User.password,
                                     "first_name" to User.loginId,
-                                    "FcmToken" to token
+                                    "FcmToken" to token.value
                                 )
 
                             )
@@ -150,42 +154,63 @@ class UserViewModel() : ViewModel() {
     @SuppressLint("SuspiciousIndentation")
     private fun Logins(User: user, state: (state: Boolean) -> Unit, context: Context) {
 
-        Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
-                task->
-            if (task.isSuccessful) {
-                // Sign in success, update UI with the signed-in user's information
-                Log.d(TAG, "Login:success")
-                id = task.result.user?.uid!!
-                state(true)
 
-                FirebaseFirestore.getInstance()
-                            .collection("users").document(task.result.user?.uid!!).get()
-                            .addOnSuccessListener { document ->
-                                name = document.getString("first_name").toString()
-                                val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                                sharedPreferences.edit()
-                                    .putString("login", "true")
-                                    .putString("email",User.emial)
-                                    .putString("uid",id)
-                                    .putString("password",User.password)
-                                    .putString("name",name)
-                                    .apply()
-                            }
+       viewModelScope.launch{
+           FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
+               if (task.isSuccessful){
+                   token.update { task.result.toString() }
+               }
+           }
+           Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
+                   task->
+               if (task.isSuccessful) {
+                   // Sign in success, update UI with the signed-in user's information
 
-
-
-            } else {
-                // If sign in fails, display a message to the user.
-                Log.e(TAG, "Login:failure", task.exception)
-                Toast.makeText(
-                    context,
-                    "Password or Email incorrect.",
-                    Toast.LENGTH_SHORT,
-                ).show()
+                   Log.d(TAG, "Login:success")
+                   id = task.result.user?.uid!!
+                   state(true)
+                   FirebaseFirestore.getInstance()
+                       .collection("users").document(id)
+                       .update("FcmToken",token.value).addOnCompleteListener{task->
+                           if (task.isSuccessful){
+                               Log.d("token Success", "Logins: isSuccessful", )
+                           }else {
+                               Log.e("token Failed", "Logins: ${task.exception}", )
+                           }
+                       }
 
 
-            }
-        }
+                   FirebaseFirestore.getInstance()
+                       .collection("users")
+                       .document(id).get()
+                       .addOnSuccessListener { document ->
+                           name = document.getString("first_name").toString()
+                           val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                           sharedPreferences.edit()
+                               .putString("login", "true")
+                               .putString("email",User.emial)
+                               .putString("uid",id)
+                               .putString("password",User.password)
+                               .putString("name",name)
+                               .apply()
+                       }
+
+
+
+               } else {
+                   // If sign in fails, display a message to the user.
+                   Log.e(TAG, "Login:failure", task.exception)
+                   Toast.makeText(
+                       context,
+                       "Password or Email incorrect.",
+                       Toast.LENGTH_SHORT,
+                   ).show()
+
+
+               }
+           }
+
+       }
 
 
 
