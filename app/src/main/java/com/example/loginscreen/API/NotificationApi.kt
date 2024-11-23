@@ -10,7 +10,7 @@ object NotificationApi {
     fun create(): NotificationInterface{
         if (retrofit == null){
             retrofit = Retrofit.Builder()
-                .baseUrl("https://fcm.googleapis.com/v1/")
+                .baseUrl("https://fcm.googleapis.com")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         }

@@ -191,6 +191,7 @@ fun MessageScreen(
                         trailingIcon = {
                             IconButton(onClick = {
                                 viewModel.NewMessage(firstName)
+                                viewModel.sendMessage(firstName,Message)
                             }) {
                                 Icon(
                                     imageVector = Icons.Filled.Send,

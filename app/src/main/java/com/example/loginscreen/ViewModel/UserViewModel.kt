@@ -15,6 +15,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.example.loginscreen.API.NotificationApi
+import com.example.loginscreen.Notification.NotificationData
+import com.example.loginscreen.Notification.NotificationIn
 import com.hamza.test.Constants
 import com.hamza.test.Event.UserEvent
 import com.hamza.test.Event.user
@@ -32,6 +35,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class UserViewModel() : ViewModel() {
 
@@ -215,8 +221,7 @@ class UserViewModel() : ViewModel() {
 
 
     }
-    private fun setToken(){
-   }
+
     /**
      *this function  for signOut
      * */
@@ -262,19 +267,54 @@ class UserViewModel() : ViewModel() {
 
 
 
-    fun getUserToken(name:String,callBack:(String?) -> Unit){
-        Firebase.firestore.collection("users")
-            .whereEqualTo("first_name",name)
-            .get()
-            .addOnSuccessListener{ document->
-                if (!document.isEmpty){
-                    val userDoc = document.first()
-                    val token = userDoc.getString("fcmToken")
-                    callBack(token)
-                }else{
-                    callBack(null)
+    fun sendMessage(name:String,message: String){
+        viewModelScope.launch{
+            var tokens:String? = ""
+            FirebaseFirestore.getInstance().collection("users")
+                .whereEqualTo("first_name",name)
+                .get()
+                .addOnSuccessListener{ documents->
+                    if (!documents.isEmpty){
+
+                        for (doc in documents){
+                            tokens = doc.getString("FcmToken")
+                        }
+
+
+
+                    }else{
+                        Log.e("get Token", "get Token is Failed:${token}", )
+
+                    }
                 }
-            }
+            val notification = NotificationIn(
+                message = NotificationData(
+                    token = tokens,
+                    hashMapOf(
+                        "title" to name,
+                        "body" to message
+                    )
+                )
+            )
+            NotificationApi.create().sendNotification(notification)
+                .enqueue(object : Callback<NotificationIn>{
+                    override fun onResponse(
+                        call: Call<NotificationIn?>,
+                        response: Response<NotificationIn?>,
+                    ) {
+                        Log.d("notification", "onResponse: ${response}", )
+                    }
+
+                    override fun onFailure(
+                        call: Call<NotificationIn?>,
+                        t: Throwable,
+                    ) {
+                        Log.e("notification", "onFailure: ${t}", )
+                    }
+
+                })
+        }
+
     }
 
   /**

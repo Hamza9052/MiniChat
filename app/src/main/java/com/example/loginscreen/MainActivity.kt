@@ -1,29 +1,19 @@
 package com.hamza.test
 
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.Observer
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -34,10 +24,12 @@ import com.hamza.test.UiHome.MessageScreen
 import com.hamza.test.UiHome.Screen
 import com.hamza.test.ViewModel.UserViewModel
 import com.hamza.test.ui.theme.LoginScreenTheme
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
-import com.hamza.test.Event.UserEvent
-import com.hamza.test.Event.user
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -47,6 +39,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            Dexter.withContext(applicationContext)
+                .withPermission(Manifest.permission.POST_NOTIFICATIONS)
+                .withListener(object : PermissionListener{
+                    override fun onPermissionGranted(p0: PermissionGrantedResponse?) {}
+
+                    override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
+
+                    override fun onPermissionRationaleShouldBeShown(
+                        p0: PermissionRequest?,
+                        p1: PermissionToken?,
+                    ) {
+                        p1?.continuePermissionRequest()
+                    }
+
+                }).check()
+        }
+
         enableEdgeToEdge()
         setContent {
 

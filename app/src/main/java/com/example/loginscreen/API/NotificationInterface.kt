@@ -10,7 +10,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 interface NotificationInterface {
-    @POST("projects/test-6d005/messages:send")
+    @POST("/v1/projects/test-6d005/messages:send")
     @Headers(
         "Content-Type: application/json",
         "Accept: application/json"

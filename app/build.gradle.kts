@@ -116,9 +116,11 @@ dependencies {
 
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
-
+    implementation("com.karumi:dexter:6.2.3")
     implementation(libs.androidx.material)
     implementation(libs.ui)
+    implementation ("com.google.firebase:firebase-appcheck-safetynet:16.0.1")
+    implementation ("com.google.firebase:firebase-appcheck-playintegrity:16.0.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")
     implementation("com.google.firebase:firebase-firestore:25.1.1")
 }
