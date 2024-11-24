@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.hamza.test"
+    namespace = "com.example.test"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.hamza.test"
+        applicationId = "com.example.test"
         minSdk = 24
         //noinspection OldTargetApi
         targetSdk = 34
@@ -101,7 +101,6 @@ dependencies {
 
     // Dependency Injection
     implementation(libs.hilt.android)
-
     // Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -113,12 +112,14 @@ dependencies {
     implementation ("androidx.compose.runtime:runtime-livedata:1.7.5")
     implementation( "androidx.compose.runtime:runtime:1.7.5")
     // Other dependencies
-
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.karumi:dexter:6.2.3")
     implementation(libs.androidx.material)
     implementation(libs.ui)
+
     implementation ("com.google.firebase:firebase-appcheck-safetynet:16.0.1")
     implementation ("com.google.firebase:firebase-appcheck-playintegrity:16.0.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")

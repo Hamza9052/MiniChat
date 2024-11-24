@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.hamza.test"
+    package="com.example.test"
     >
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -32,16 +32,16 @@
 
 
         <service
-            android:name="com.example.loginscreen.Notification.Message"
+            android:name="com.example.test.Notification.Message"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"/>
+<!--        <meta-data-->
+<!--            android:name="com.google.android.geo.AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"-->
+<!--            android:value="AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"/>-->
     </application>
 
 </manifest>

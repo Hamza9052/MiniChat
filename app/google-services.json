@@ -27,12 +27,40 @@
     },
     {
       "client_info": {
+        "mobilesdk_app_id": "1:215962324356:android:6625ff850ffcffaa0c61d1",
+        "android_client_info": {
+          "package_name": "com.example.test"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:215962324356:android:7be7b8a40b39d75a0c61d1",
         "android_client_info": {
           "package_name": "com.hamza.test"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "215962324356-1cd3norabucm82abdf3qqf1en9sq9rr0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hamza.test",
+            "certificate_hash": "7cd2a420b5330f283c4161c12cc7c8af41d3823a"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCeCo-3vtc5FcoXdZEEFNhmYldYXy9vd1w"
