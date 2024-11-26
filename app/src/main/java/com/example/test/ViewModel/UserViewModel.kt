@@ -261,7 +261,9 @@ class UserViewModel() : ViewModel() {
                     }
     }
 
-
+    /**
+     * this function for get notification of message
+     * */
     private var tok = MutableStateFlow("")
     fun sendMessage(name:String,messag:String,context: Context){
         viewModelScope.launch{
@@ -347,9 +349,6 @@ class UserViewModel() : ViewModel() {
 
         }
     }
-
-
-
 
   /**
   * this function for show all user on your main Screen
@@ -472,9 +471,6 @@ class UserViewModel() : ViewModel() {
                                     else{
                                         Log.e("data", doc.id)
                                     }
-
-
-
                                 }
                                 updateMessages(list)
                             }
@@ -482,22 +478,18 @@ class UserViewModel() : ViewModel() {
                         }
 
 
+
             } else{
-
-
                     Firebase.firestore.collection(Constants.MESSAGES)
-                        .document("allmessage").collection(name+username)
+                        .document("allmessage")
+                        .collection(name+username)
                         .orderBy(Constants.SENT_ON)
                         .addSnapshotListener{value , e ->
                             if (e != null){
                                 Log.w("mess","ListFailed",e)
                                 return@addSnapshotListener
                             }
-
                             val list = emptyList<Map<String,Any>>().toMutableList()
-
-
-
                             value?.let {snapshot ->
                                 for(doc in snapshot.documents){
 
@@ -505,9 +497,8 @@ class UserViewModel() : ViewModel() {
                                     Log.e("data", "${nams}")
                                     if (nams != null && nams == name || nams == username){
                                         val data = doc.data
-                                        data?.set(Constants.IS_CURRENT_USER,
-                                            name == data[Constants.SENT_BY].toString()
-                                        )
+                                        data?.set(Constants.IS_CURRENT_USER, name == data[Constants.SENT_BY].toString())
+
                                         if (data != null) {
                                             list.add(data)
                                         }
@@ -516,7 +507,6 @@ class UserViewModel() : ViewModel() {
                                     }else{
                                         Log.e("data", doc.id)
                                     }
-
 
 
                                 }
@@ -528,22 +518,10 @@ class UserViewModel() : ViewModel() {
                 }
 
 
+
             }
 
-    }
-    }
-
-
-    /**
-     * this for search
-     * */
-
-
-
-
-
-
-
+    } }
 
 
 
@@ -556,6 +534,6 @@ class UserViewModel() : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-
     }
+
 }

@@ -36,8 +36,10 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,12 +56,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
-
+import kotlinx.coroutines.flow.MutableStateFlow
 
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -80,10 +83,6 @@ fun MainScreen(
             .background(Color.DarkGray)
 
     ) {
-
-
-
-
 
         Searchbar(active, viewModel, navController,showDialog)
 
@@ -110,15 +109,28 @@ fun MainScreen(
 
 
             LazyColumn(Modifier.fillMaxSize()) {
-                items(viewModel.userlist.value.size) { item ->
-
+                items(viewModel.userlist.value.size) { item->
                     val user = viewModel.userlist.value[item]
-                    if (viewModel.name == user) {
-                        Log.e("test id for saga ", user)
-                    } else {
-                        Spacer(modifier = Modifier.height(15.dp))
-                        listItem(user, navController)
+
+
+
+                    val messages:List<Map<String,Any>> by viewModel.messages.observeAsState(
+                        initial = emptyList<Map<String,Any>>().toMutableList()
+                    )
+                    LaunchedEffect(user) {
+                        viewModel.GetMessage(user)
                     }
+
+                    var N =  messages.reversed().lastOrNull()?.get("message").toString()
+
+                        if (viewModel.name == user && N != null) {
+                            Log.e("test id for saga ", user)
+                        } else {
+                            Spacer(modifier = Modifier.height(15.dp))
+                            listItem(user, navController,N)
+                        }
+
+
 
 
                 }
@@ -307,7 +319,7 @@ fun searchName(
 fun listItem(
     name: String,
     navController: NavController,
-
+    message: String
 ) {
 
 
@@ -351,7 +363,7 @@ fun listItem(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                       "Hi",
+                        message,
                         color = colorResource(R.color.BurlyWood),
                         fontSize = 15.sp
                     )
@@ -365,6 +377,11 @@ fun listItem(
         }
     }
 }
+
+
+
+
+
 
 
 /**
