@@ -2,6 +2,20 @@ package com.example.test.UiHome
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -74,7 +88,7 @@ fun MainScreen(
     navController: NavController,
 ) {
     val active by remember { mutableStateOf(false) }
-    val onDismissRequest = remember { mutableStateOf(true)}
+    val onDismissRequest = remember { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
 
     Spacer(modifier = Modifier.height(70.dp))
@@ -86,58 +100,59 @@ fun MainScreen(
 
     ) {
 
-        Searchbar(active, viewModel, navController,showDialog)
+        Searchbar(active, viewModel, navController, showDialog)
 
-            if (showDialog.value){
-                Log.e("show","work")
+        if (showDialog.value) {
+            Log.e("show", "work")
 
-                       AlertDialogSingOut(
-                           onDismissRequest = { showDialog.value = false },
-                           onConfirmation = {viewModel.action(
-                               UserEvent.signOut(user()) {state->
-                                   if (state){
-                                       showDialog.value = false
-                                       navController.navigate(Screen.Login.route)
-                                   }
-                               },
-                               context = navController.context)}
-                       )
-
-            }
-
-
-
-
-
-
-            LazyColumn(Modifier.fillMaxSize()) {
-
-                items(viewModel.userlist.value.size) { item ->
-                    val user = viewModel.userlist.value[item]
-
-                    LaunchedEffect(user) {
-                        viewModel.getlastmessage(user)
-                    }
-
-                    val lastMessage = viewModel.last.value[user]
-
-                    if(lastMessage == null || viewModel.name == user) {
-                            Log.e("message is Empty", lastMessage.toString())
-                            Log.e("test id for saga ", user)
-                    }else {
-                            Spacer(modifier = Modifier.height(15.dp))
-                            listItem(user, navController, lastMessage.toString())
-                    }
-
-
-
-
+            AlertDialogSingOut(
+                onDismissRequest = { showDialog.value = false },
+                onConfirmation = {
+                    viewModel.action(
+                        UserEvent.signOut(user()) { state ->
+                            if (state) {
+                                showDialog.value = false
+                                navController.navigate(Screen.Login.route)
+                            }
+                        },
+                        context = navController.context
+                    )
                 }
-            }
-
+            )
 
         }
+
+
+
+
+
+
+        LazyColumn(Modifier.fillMaxSize()) {
+
+            items(viewModel.userlist.value.size) { item ->
+                val user = viewModel.userlist.value[item]
+
+                LaunchedEffect(user) {
+                    viewModel.getlastmessage(user)
+                }
+
+                val lastMessage = viewModel.last.value[user]
+
+                if (lastMessage == "" || viewModel.name == user) {
+                    Log.e("message is Empty", lastMessage.toString())
+                    Log.e("test id for saga ", user)
+                } else {
+                    Spacer(modifier = Modifier.height(15.dp))
+                    listItem(user, navController, lastMessage.toString())
+                }
+
+
+            }
+        }
+
+
     }
+}
 
 
 //@Composable
@@ -147,141 +162,123 @@ fun MainScreen(
 //
 //}
 
-    @SuppressLint("StateFlowValueCalledInComposition")
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun Searchbar(
-        active: Boolean,
-        viewModel: UserViewModel,
-        navController: NavController,
-        showDialog: MutableState<Boolean>,
+@SuppressLint("StateFlowValueCalledInComposition")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Searchbar(
+    active: Boolean,
+    viewModel: UserViewModel,
+    navController: NavController,
+    showDialog: MutableState<Boolean>,
+) {
+    val user = user()
+    var actives by remember { mutableStateOf(active) }
+    var search by remember { mutableStateOf(user.search) }
 
-        ) {
+    // Animated padding and visibility
+    val animatedPadding by animateDpAsState(
+        targetValue = if (actives) 0.dp else 16.dp,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing) // Smooth easing
+    )
 
-        val user = user()
-        var actives by remember { mutableStateOf(active) }
-        var search by remember { mutableStateOf(user.search) }
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (actives) 1f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = LinearEasing) // Fade effect
+    )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = animatedPadding)
+    ) {
+        SearchBar(
+            query = search,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (actives) 0.dp else 16.dp)
-        ) {
-
-            SearchBar(
-                query = search,
-                modifier = Modifier
-                    .weight(1f) // Occupy available width but leave space for IconButton
-                    .padding(end = if (actives) 0.dp else 8.dp),
-                colors = SearchBarDefaults.colors(containerColor =colorResource(R.color.DimGray)),
-                onQueryChange = { search = it },
-                onSearch = {},
-                active = actives,
-                onActiveChange = { actives = it },
-                placeholder = {
-                    Text(
-                        text = "Search",
-                        color = colorResource(R.color.BurlyWood),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                },
-                leadingIcon = {
-                    (if (actives) Icons.Filled.Close else null)?.let {
-                        IconButton(onClick = { navController.navigate(Screen.Main_Screen.route) }) {
-                            Icon(
-                                imageVector = it,
-                                contentDescription = "Search",
-                                modifier = Modifier.size(20.dp),
-                                tint = colorResource(R.color.BurlyWood)
-
-                            )
-                        }
-
-                    }
-                },
-                trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search",
-                        modifier = Modifier.size(20.dp),
-                        tint = colorResource(R.color.BurlyWood)
-
-                    )
-                }
-            ) {
-
-
-                    val size = viewModel.userlist.value.size
-
-                    for (i in 0 until size) {
-
-                        val users = viewModel.userlist.value.get(i)
-                        for (i in 0 until users.length) {
-                            if (
-                                users.contains(search) &&
-                                search.isNotEmpty() &&
-                                !viewModel.name.equals(users)
-                            ) {
-                                LazyColumn {
-                                    item {
-                                        searchName(navController, users)
-                                    }
-                                }
-                                break
-                            }
-                        }
-                    }
-
-                }
-                if (actives){
-
-                }else{
-                    Card(
-                        modifier = Modifier
-                            .padding(top = 33.dp)
-                            .size(45.dp)
-                            .clickable { showDialog.value = true },
-                        shape = RoundedCornerShape(50.dp),
-                        colors = CardDefaults.cardColors(colorResource(R.color.BurlyWood))
+                .weight(1f)
+                .padding(end = if (actives) 0.dp else 8.dp),
+            colors = SearchBarDefaults.colors(containerColor = colorResource(R.color.DimGray)),
+            onQueryChange = { search = it },
+            onSearch = {},
+            active = actives,
+            onActiveChange = { actives = it },
+            placeholder = {
+                Text(
+                    text = "Search",
+                    color = colorResource(R.color.BurlyWood),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            },
+            leadingIcon = {
+                if (actives) {
+                    IconButton(
+                        onClick = { actives = false }
                     ) {
-                        IconButton(
-                            onClick = { showDialog.value = true},
-                            modifier = Modifier
-                                .size(45.dp)
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            modifier = Modifier.size(20.dp),
+                            tint = colorResource(R.color.BurlyWood)
+                        )
+                    }
+                }
+            },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search",
+                    modifier = Modifier.size(20.dp),
+                    tint = colorResource(R.color.BurlyWood)
+                )
+            }
+        ) {
+            val size = viewModel.userlist.value.size
 
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Search",
-                                modifier = Modifier.size(30.dp) ,
-                                tint = colorResource(R.color.DarkSlateBlue)
-
-                            )
-
+            for (i in 0 until size) {
+                val users = viewModel.userlist.value[i]
+                if (users.contains(search) && search.isNotEmpty() && !viewModel.name.equals(users)) {
+                    LazyColumn {
+                        item {
+                            searchName(navController, users)
                         }
                     }
-
-                }}
-
+                    break
                 }
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        // Animated Logout Button
+        AnimatedVisibility(
+            visible = !actives,
+            exit = fadeOut(animationSpec = tween(50)) + slideOutVertically(
+                targetOffsetY = { it },
+                animationSpec = tween(50, easing = FastOutSlowInEasing)
+            )
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(top = 33.dp)
+                    .size(45.dp)
+                    .clickable { showDialog.value = true },
+                shape = RoundedCornerShape(50.dp),
+                colors = CardDefaults.cardColors(colorResource(R.color.BurlyWood))
+            ) {
+                IconButton(
+                    onClick = { showDialog.value = true },
+                    modifier = Modifier.size(45.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = "Search",
+                        modifier = Modifier.size(30.dp),
+                        tint = colorResource(R.color.DarkSlateBlue)
+                    )
+                }
+            }
+        }
+    }
+}
 
 
 @Composable
@@ -318,7 +315,7 @@ fun searchName(
 fun listItem(
     name: String,
     navController: NavController,
-    message: String
+    message: String,
 ) {
 
 
@@ -350,8 +347,8 @@ fun listItem(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(50.dp)),
-                    
-                )
+
+                    )
                 Spacer(modifier = Modifier.weight(0.1f))
                 Column {
                     Text(
@@ -380,57 +377,53 @@ fun listItem(
 }
 
 
-
-
-
-
-
 /**
  * this function for AlerDialog
  */
 
 
-
 @Composable
 fun AlertDialogSingOut(
     onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit
+    onConfirmation: () -> Unit,
 ) {
 
-  AlertDialog(
-      onDismissRequest = onDismissRequest,
-      icon = {
-          Icon(
-              Icons.AutoMirrored.Filled.Logout,
-              contentDescription = "Logout",
-              tint = colorResource(R.color.BurlyWood)
-          )
-             },
-      text = { Text(
-          "Logout",
-          fontSize = 25.sp,
-          color = colorResource(R.color.BurlyWood)
-      ) },
-      confirmButton ={
-          TextButton(onClick =  onConfirmation) {
-              Text(
-                  text = "Logout",
-                  color = colorResource(R.color.BurlyWood),
-                  fontSize = 18.sp
-              )
-          }
-      },
-      dismissButton ={
-          TextButton(onClick = onDismissRequest) {
-              Text(
-                  text = "Cancel",
-                  color = colorResource(R.color.BurlyWood),
-                  fontSize = 18.sp
-              )
-          }
-      },
-      containerColor = colorResource(R.color.DarkSlateBlue),
-      shape = RoundedCornerShape(17.dp)
-  )
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        icon = {
+            Icon(
+                Icons.AutoMirrored.Filled.Logout,
+                contentDescription = "Logout",
+                tint = colorResource(R.color.BurlyWood)
+            )
+        },
+        text = {
+            Text(
+                "Logout",
+                fontSize = 25.sp,
+                color = colorResource(R.color.BurlyWood)
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirmation) {
+                Text(
+                    text = "Logout",
+                    color = colorResource(R.color.BurlyWood),
+                    fontSize = 18.sp
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text(
+                    text = "Cancel",
+                    color = colorResource(R.color.BurlyWood),
+                    fontSize = 18.sp
+                )
+            }
+        },
+        containerColor = colorResource(R.color.DarkSlateBlue),
+        shape = RoundedCornerShape(17.dp)
+    )
 
 }
