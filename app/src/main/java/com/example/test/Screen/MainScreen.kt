@@ -57,12 +57,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 
 @SuppressLint("StateFlowValueCalledInComposition")
@@ -109,26 +111,23 @@ fun MainScreen(
 
 
             LazyColumn(Modifier.fillMaxSize()) {
-                items(viewModel.userlist.value.size) { item->
+
+                items(viewModel.userlist.value.size) { item ->
                     val user = viewModel.userlist.value[item]
 
-
-
-                    val messages:List<Map<String,Any>> by viewModel.messages.observeAsState(
-                        initial = emptyList<Map<String,Any>>().toMutableList()
-                    )
                     LaunchedEffect(user) {
-                        viewModel.GetMessage(user)
+                        viewModel.getlastmessage(user)
                     }
 
-                    var N =  messages.reversed().lastOrNull()?.get("message").toString()
+                    val lastMessage = viewModel.last.value[user]
 
-                        if (viewModel.name == user && N != null) {
+                    if(lastMessage == null || viewModel.name == user) {
+                            Log.e("message is Empty", lastMessage.toString())
                             Log.e("test id for saga ", user)
-                        } else {
+                    }else {
                             Spacer(modifier = Modifier.height(15.dp))
-                            listItem(user, navController,N)
-                        }
+                            listItem(user, navController, lastMessage.toString())
+                    }
 
 
 
@@ -348,7 +347,9 @@ fun listItem(
                 Image(
                     painter = painterResource(R.drawable.profil),
                     contentDescription = "profile",
-                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(50.dp)),
+                    modifier = Modifier
+                        .size(60.dp)
+                        .clip(RoundedCornerShape(50.dp)),
                     
                 )
                 Spacer(modifier = Modifier.weight(0.1f))

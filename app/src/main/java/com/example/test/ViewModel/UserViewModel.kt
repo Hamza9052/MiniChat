@@ -6,9 +6,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.test.API.NotificationApi
@@ -255,7 +259,6 @@ class UserViewModel() : ViewModel() {
                             val firs_name = document.getString("first_name")
                             if (firs_name != null) {
                                 firstNames.value.add(firs_name)
-
                             }
                         }
                     }
@@ -525,9 +528,73 @@ class UserViewModel() : ViewModel() {
 
 
 
+    private val lastmessage = MutableStateFlow(mutableMapOf<String,String>())
+    val last:StateFlow<Map<String,String>> = lastmessage.asStateFlow()
+
+    fun getlastmessage(username: String) {
+
+
+        val collectionPath1 = "$username$name"
+        val collectionPath2 = "$name$username"
+        Firebase.firestore
+            .collection(Constants.MESSAGES)
+            .document("allmessage")
+            .collection(collectionPath1)
+            .orderBy(Constants.SENT_ON)
+            .limitToLast(1)
+            .get()
+            .addOnSuccessListener { snapshot1 ->
+                if (!snapshot1.isEmpty) {
+                    // Process the result from collectionPath1
+                    snapshot1?.documents?.lastOrNull()?.let { doc ->
+                        val lastMsg = doc.getString("message").orEmpty()
+                        val currentLast = lastmessage.value[username]
+
+                        // Update only if the message changes
+                        if (currentLast != lastMsg) {
+                            lastmessage.update { it.toMutableMap().apply { this[username] = lastMsg } }
+                        }
+                    } ?: run {
+                        // No messages found for the user
+                        lastmessage.update { it.toMutableMap().apply { this[username] = "" } }
+                    }
+                } else {
+                    // Check the second collection path
+                    Firebase.firestore
+                        .collection(Constants.MESSAGES)
+                        .document("allmessage")
+                        .collection(collectionPath2)
+                        .orderBy(Constants.SENT_ON)
+                        .limitToLast(1)
+                        .get()
+                        .addOnSuccessListener { snapshot2 ->
+                            snapshot2?.documents?.lastOrNull()?.let { doc ->
+                                val lastMsg = doc.getString("message").orEmpty()
+                                val currentLast = lastmessage.value[username]
+
+                                // Update only if the message changes
+                                if (currentLast != lastMsg) {
+                                    lastmessage.update { it.toMutableMap().apply { this[username] = lastMsg } }
+                                }
+                            } ?: run {
+                                // No messages found for the user
+                                lastmessage.update { it.toMutableMap().apply { this[username] = "" } }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("getLastMessage", "Error querying collectionPath2", e)
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("getLastMessage", "Error querying collectionPath1", e)
+            }
+    }
+
     /**
      * Update the list after getting the details from firestore
      */
+
     private fun updateMessages(list: MutableList<Map<String, Any>>) {
         _messages.value = list.asReversed()
     }
