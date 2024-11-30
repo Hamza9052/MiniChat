@@ -62,6 +62,9 @@ class UserViewModel() : ViewModel() {
     private val firstNames = MutableStateFlow(mutableListOf<String>())
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
+    private val _isLoggedIn = MutableStateFlow(false) // Default to logged out
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
+
     var name= ""
    var id =""
 
@@ -90,19 +93,17 @@ class UserViewModel() : ViewModel() {
 
 
     @SuppressLint("SuspiciousIndentation")
-    fun check(context: Context, navController: NavController) {
+    fun check(context: Context, navController: NavController):String {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val check = sharedPreferences.getString("login","")
         val email=sharedPreferences.getString("email","")
         val password = sharedPreferences.getString("password","")
             if (check.equals("true")){
                 Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
-               navController.navigate(Screen.Main_Screen.route)
-            }else{
-                navController.navigate(Screen.Login.route)
+
             }
 
-
+        return check.toString()
     }
     private var token = MutableStateFlow("")
 
@@ -115,7 +116,6 @@ class UserViewModel() : ViewModel() {
         FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
             if (task.isSuccessful){
                 token.update {task.result.toString()}
-
                 Log.d("token success", "CreateAccount: $token")
             }
         }
@@ -184,7 +184,7 @@ class UserViewModel() : ViewModel() {
                                Log.e("token Failed", "Logins: ${task.exception}", )
                            }
                        }
-
+                   _isLoggedIn.value = true
 
                    FirebaseFirestore.getInstance()
                        .collection("users")
@@ -193,7 +193,7 @@ class UserViewModel() : ViewModel() {
                            name = document.getString("first_name").toString()
                            val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                            sharedPreferences.edit()
-                               .putString("login", "true")
+                               .putString("login", _isLoggedIn.value.toString())
                                .putString("email",User.emial)
                                .putString("uid",id)
                                .putString("password",User.password)
@@ -231,10 +231,11 @@ class UserViewModel() : ViewModel() {
             Log.e("logout", "im here")
             Firebase.auth.signOut()
             state(true)
+        _isLoggedIn.value = false
             // Clear user data from SharedPreferences
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
-            .putString("login", "false")
+            .putString("login", _isLoggedIn.value.toString())
             .remove("")
             .remove("email")
             .remove("uid")

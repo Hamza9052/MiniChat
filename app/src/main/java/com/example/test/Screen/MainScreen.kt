@@ -15,6 +15,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 
 import androidx.compose.foundation.Image
@@ -52,6 +53,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 
@@ -73,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
 import com.example.test.R
@@ -85,11 +88,11 @@ import kotlinx.coroutines.flow.update
 @Composable
 fun MainScreen(
     viewModel: UserViewModel,
-    navController: NavController,
+    navController: NavController
 ) {
     val active by remember { mutableStateOf(false) }
-    val onDismissRequest = remember { mutableStateOf(true) }
     val showDialog = remember { mutableStateOf(false) }
+
 
     Spacer(modifier = Modifier.height(70.dp))
     Column(
@@ -147,6 +150,7 @@ fun MainScreen(
                 }
 
 
+
             }
         }
 
@@ -181,10 +185,6 @@ fun Searchbar(
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing) // Smooth easing
     )
 
-    val animatedAlpha by animateFloatAsState(
-        targetValue = if (actives) 1f else 0f,
-        animationSpec = tween(durationMillis = 300, easing = LinearEasing) // Fade effect
-    )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -222,6 +222,8 @@ fun Searchbar(
                             tint = colorResource(R.color.BurlyWood)
                         )
                     }
+                }else{
+                    search = ""
                 }
             },
             trailingIcon = {
@@ -237,7 +239,7 @@ fun Searchbar(
 
             for (i in 0 until size) {
                 val users = viewModel.userlist.value[i]
-                if (users.contains(search) && search.isNotEmpty() && !viewModel.name.equals(users)) {
+                if (users.contains(search) && search.isNotEmpty() && viewModel.name != users) {
                     LazyColumn {
                         item {
                             searchName(navController, users)
@@ -251,8 +253,8 @@ fun Searchbar(
         // Animated Logout Button
         AnimatedVisibility(
             visible = !actives,
-            exit = fadeOut(animationSpec = tween(50)) + slideOutVertically(
-                targetOffsetY = { it },
+            exit = fadeOut(animationSpec = tween(50)) + slideOutHorizontally(
+                targetOffsetX = { it },
                 animationSpec = tween(50, easing = FastOutSlowInEasing)
             )
         ) {

@@ -14,9 +14,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.window.isPopupLayout
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.createGraph
 import com.example.test.UiHome.Create_Account
 import com.example.test.UiHome.Login
 import com.example.test.UiHome.MainScreen
@@ -49,7 +54,6 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController()
                 LaunchedEffect(key1 = "") {
-                    ViewModel.check(navController.context,navController)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
                         Dexter.withContext(navController.context)
                             .withPermission(Manifest.permission.POST_NOTIFICATIONS)
@@ -67,63 +71,34 @@ class MainActivity : ComponentActivity() {
 
                             }).check()
                     }
+
                 }
 
+                var isLoggin = ViewModel.isLoggedIn.collectAsState()
+                var maisn = ""
+                var save = ViewModel.check(navController.context,navController)
+                if (isLoggin.value == true || save == "true"){
+                    maisn = Screen.Main_Screen.route
+                }else{
+                    maisn = Screen.Login.route
+                }
 
-                NavHost(navController = navController, startDestination =   Screen.Login.route){
-
-                        composable(
-                            Screen.Login.route,
-                            exitTransition = {
-                                slideOutHorizontally(
-                                    targetOffsetX = { -1000 },
-                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
-                                )
-                            },
-                            popEnterTransition = {
-                                slideInHorizontally(
-                                    initialOffsetX = { -1000 },
-                                    animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
-                                )
-                            }
-                        ){
-
-                            Login(  navController = navController,ViewModel,navController.context)
+                NavHost(navController = navController, startDestination = maisn){
+                    composable(
+                        Screen.Main_Screen.route,
+                        enterTransition = {
+                            fadeIn(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing))
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { -1000 },
+                                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                            )
                         }
+                    ){
+                        MainScreen(viewModel = ViewModel,navController)
 
-                        composable(
-                            Screen.Main_Screen.route,
-                            enterTransition = {
-                                fadeIn(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing))
-                            },
-                            exitTransition = {
-                                slideOutHorizontally(
-                                    targetOffsetX = { -1000 },
-                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
-                                )
-                            }
-                        ){
-                            MainScreen(viewModel = ViewModel,navController)
-                        }
-
-
-                        composable(
-                            Screen.register.route,
-                            enterTransition = {
-                                slideInHorizontally(
-                                    initialOffsetX = { 1000 },
-                                    animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
-                                )
-                            },
-                            exitTransition = {
-                                slideOutHorizontally(
-                                    targetOffsetX = { 1000 },
-                                    animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
-                                )
-                            }
-                        ){
-                            Create_Account( navController = navController,ViewModel,navController.context)
-                        }
+                    }
 
                     composable(
                         "message/{first_name}",
@@ -143,12 +118,54 @@ class MainActivity : ComponentActivity() {
                         val userId = backStackEntry.arguments?.getString("first_name") ?: ""
                         MessageScreen(navController, ViewModel, userId) // Pass userId to MessageScreen
                     }
+
+                    composable(
+                        Screen.Login.route,
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { -1000 },
+                                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                            )
+                        },
+                        popEnterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { -1000 },
+                                animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                            )
                         }
-                }
+                    ){
+
+                        Login(  navController = navController,ViewModel,navController.context)
+                    }
+
+
+                    composable(
+                        Screen.register.route,
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ){
+                        Create_Account( navController = navController,ViewModel,navController.context)
+                    }
 
                 }
+
+
+
             }
+
         }
+    }
+}
 
 
 

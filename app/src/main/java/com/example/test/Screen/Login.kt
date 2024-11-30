@@ -52,6 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.createGraph
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -208,10 +210,7 @@ fun Login(
 
                }else{
                    ViewModel.action(UserEvent.Login(user){state->
-
                            navController.navigate(Screen.Main_Screen.route)
-
-
 
                    },context)
                }
