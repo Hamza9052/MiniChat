@@ -38,6 +38,7 @@ import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.LocalDateTime
 
 class UserViewModel() : ViewModel() {
 
@@ -58,7 +59,8 @@ class UserViewModel() : ViewModel() {
     val usd: LiveData<String> get() = _used
 
 
-
+    private val _listTime = MutableLiveData(emptyList<String>().toMutableList())
+    val listTime :LiveData<MutableList<String>> = _listTime
     private val firstNames = MutableStateFlow(mutableListOf<String>())
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
@@ -160,7 +162,6 @@ class UserViewModel() : ViewModel() {
     @SuppressLint("SuspiciousIndentation")
     private fun Logins(User: user, state: (state: Boolean) -> Unit, context: Context) {
 
-
        viewModelScope.launch{
            FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
                if (task.isSuccessful){
@@ -218,8 +219,6 @@ class UserViewModel() : ViewModel() {
 
        }
 
-
-
     }
 
     /**
@@ -231,6 +230,15 @@ class UserViewModel() : ViewModel() {
             Log.e("logout", "im here")
             Firebase.auth.signOut()
             state(true)
+             FirebaseFirestore.getInstance()
+            .collection("users").document(id)
+            .update("FcmToken","").addOnCompleteListener{task->
+                if (task.isSuccessful){
+                    Log.d("token Success", "Logins: isSuccessful", )
+                }else {
+                    Log.e("token Failed", "Logins: ${task.exception}", )
+                }
+            }
         _isLoggedIn.value = false
             // Clear user data from SharedPreferences
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -268,7 +276,9 @@ class UserViewModel() : ViewModel() {
     /**
      * this function for get notification of message
      * */
+
     private var tok = MutableStateFlow("")
+
     fun sendMessage(name:String,messag:String,context: Context){
         viewModelScope.launch{
             try {
@@ -400,6 +410,7 @@ class UserViewModel() : ViewModel() {
     * this message for add new message
     * */
 
+    @SuppressLint("NewApi")
     fun NewMessage(username:String){
         val message:String = _message.value ?: throw IllegalArgumentException("Message empty")
         val collection1 = username + name
@@ -418,7 +429,8 @@ class UserViewModel() : ViewModel() {
                         hashMapOf(
                             Constants.MESSAGE to message,
                             Constants.SENT_BY to name,
-                            Constants.SENT_ON to System.currentTimeMillis()
+                            Constants.SENT_ON to System.currentTimeMillis(),
+                            Constants.TIME to "${LocalDateTime.now().hour}:${LocalDateTime.now().minute}"
                         )
 
                     ).addOnSuccessListener {
@@ -455,10 +467,10 @@ class UserViewModel() : ViewModel() {
                             }
 
                             val list = emptyList<Map<String,Any>>().toMutableList()
-
+                            val listTi = emptyList<String>().toMutableList()
                             value?.let {snapshot ->
                                 for(doc in snapshot.documents){
-
+                                    val time = doc.getString("time")
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
                                     if (nams != null && nams == name || nams == username){
@@ -472,10 +484,18 @@ class UserViewModel() : ViewModel() {
                                         Log.e("data", "${data}")
 
                                     }
+                                    if (time!!.isNotEmpty()){
+                                        listTi.add(time)
+
+                                    }
                                     else{
                                         Log.e("data", doc.id)
                                     }
                                 }
+
+                                    _listTime.value = listTi.asReversed()
+
+
                                 updateMessages(list)
                             }
 
@@ -494,9 +514,10 @@ class UserViewModel() : ViewModel() {
                                 return@addSnapshotListener
                             }
                             val list = emptyList<Map<String,Any>>().toMutableList()
+                            val listTi = emptyList<String>().toMutableList()
                             value?.let {snapshot ->
                                 for(doc in snapshot.documents){
-
+                                    val time = doc.getString("time")
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
                                     if (nams != null && nams == name || nams == username){
@@ -506,6 +527,10 @@ class UserViewModel() : ViewModel() {
                                         if (data != null) {
                                             list.add(data)
                                         }
+                                        if (time!!.isNotEmpty()){
+                                            listTi.add(time)
+
+                                        }
                                         Log.e("data", "${data}")
 
                                     }else{
@@ -514,6 +539,7 @@ class UserViewModel() : ViewModel() {
 
 
                                 }
+                                _listTime.value = listTi.asReversed()
                                 updateMessages(list)
                             }
 

@@ -58,6 +58,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.test.Constants
+import java.time.LocalDateTime
+import java.util.Calendar
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +75,9 @@ fun MessageScreen(
     val Message:String by viewModel.message.observeAsState(initial = "")
     val Messages:List<Map<String,Any>> by viewModel.messages.observeAsState(
         initial = emptyList<Map<String,Any>>().toMutableList()
+    )
+    val times:List<String> by viewModel.listTime.observeAsState(
+        initial = emptyList<String>().toMutableList()
     )
 
     LaunchedEffect(userId) {
@@ -147,9 +152,11 @@ fun MessageScreen(
                     items(Messages.size) { index ->
                         val message = Messages[index]
                         val isCurrentUser = message[Constants.IS_CURRENT_USER] as Boolean
+                        val time = times[index]
                         messageUser1(
                             message = message[Constants.MESSAGE].toString(),
-                            isCurrentUser = isCurrentUser
+                            isCurrentUser = isCurrentUser,
+                            time = time
                         )
                         Spacer(modifier = Modifier.height(5.dp))
                     }
@@ -215,12 +222,17 @@ fun MessageScreen(
 
 
 
+@SuppressLint("NewApi")
 @Composable
 fun messageUser1(
     message: String,
-    isCurrentUser:Boolean
+    isCurrentUser:Boolean,
+    time:String
 ){
 
+    var calendar = LocalDateTime.now()
+    calendar.hour
+    calendar.minute
     Card(
         shape = RoundedCornerShape(10.dp),
         colors = CardColors(
@@ -243,26 +255,38 @@ fun messageUser1(
 
         )
     ) {
-        Text(
-            text = message,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign =
-            if (isCurrentUser)
-                TextAlign.End
-            else
-                TextAlign.Start,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            color =
-            if (!isCurrentUser)
-                colorResource(R.color.BurlyWood)
-            else
-                colorResource(R.color.DarkSlateBlue)
+        Column {
+            Text(
+                text = message,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign =
+                if (isCurrentUser)
+                    TextAlign.End
+                else
+                    TextAlign.Start,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 13.dp, start = 13.dp, end = 13.dp, bottom = 2.dp),
+                color =
+                if (!isCurrentUser)
+                    colorResource(R.color.BurlyWood)
+                else
+                    colorResource(R.color.DarkSlateBlue)
 
-
-        )
+            )
+            Spacer(modifier = Modifier.height(1.dp))
+            Text(
+                text = time,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.End,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 3.dp),
+                color =Color.Black
+            )
+        }
 
     }
 

@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
@@ -22,6 +23,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
@@ -33,56 +35,69 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DrawerDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.TextButton
+import androidx.compose.material.contentColorFor
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
-
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.currentRecomposeScope
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
+import kotlinx.coroutines.launch
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -92,9 +107,118 @@ fun MainScreen(
 ) {
     val active by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState (initialValue = DrawerValue.Closed )
+    val scope = rememberCoroutineScope()
 
 
-    Spacer(modifier = Modifier.height(70.dp))
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = Color.DarkGray,
+                drawerContentColor = contentColorFor(colorResource(R.color.White)),
+                modifier =     if(navController.context.resources.configuration.smallestScreenWidthDp >= 400){
+                    Modifier
+                        .fillMaxWidth(0.3f)
+                }else{
+                    Modifier
+                        .fillMaxWidth(0.7f)
+                },
+                content = {
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                        VerticalDivider(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardColors(
+                                    contentColor = Color.DarkGray,
+                                    containerColor = Color.DarkGray,
+                                    disabledContentColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent
+                                ),
+                                onClick = {
+
+                                }
+                            ) {
+
+                                Row {
+                                    Image(
+                                        painter = painterResource(R.drawable.profil),
+                                        contentDescription = "profile",
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .clip(RoundedCornerShape(50.dp)),
+                                    )
+                                    Spacer(modifier = Modifier.weight(0.1f))
+                                    Column {
+                                        Text(
+                                            viewModel.name,
+                                            color = colorResource(R.color.BurlyWood),
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+
+                                            )
+                                    }
+
+                                }
+
+
+                            }
+                        }
+
+                        VerticalDivider(modifier = Modifier.height(10.dp))
+
+                        NavigationDrawerItem(
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Quiz Icon",
+                                    tint = colorResource(R.color.BurlyWood)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = "Quiz",
+                                    color = colorResource(R.color.White)
+                                )
+                            },
+                            selected = false,
+                            onClick = { },
+                            colors = NavigationDrawerItemDefaults.colors(colorResource(R.color.DimGray))
+                        )
+
+                        NavigationDrawerItem(
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Logout,
+                                    contentDescription = "Logout",
+                                    tint = colorResource(R.color.BurlyWood)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = "Logout",
+                                    color = colorResource(R.color.White)
+                                )
+                            },
+                            selected = false,
+                            onClick = {
+                                showDialog.value = true
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(colorResource(R.color.DimGray))
+                        )
+                    } }
+            )
+        },
+        content =  {
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -103,7 +227,11 @@ fun MainScreen(
 
     ) {
 
-        Searchbar(active, viewModel, navController, showDialog)
+        Searchbar(active, viewModel, navController, showDialog,{
+            scope.launch {
+                drawerState.open()
+            }
+        })
 
         if (showDialog.value) {
             Log.e("show", "work")
@@ -155,7 +283,9 @@ fun MainScreen(
         }
 
 
-    }
+    }}
+        })
+        }
 }
 
 
@@ -174,6 +304,7 @@ fun Searchbar(
     viewModel: UserViewModel,
     navController: NavController,
     showDialog: MutableState<Boolean>,
+    click:()->Unit
 ) {
     val user = user()
     var actives by remember { mutableStateOf(active) }
@@ -181,7 +312,7 @@ fun Searchbar(
 
     // Animated padding and visibility
     val animatedPadding by animateDpAsState(
-        targetValue = if (actives) 0.dp else 16.dp,
+        targetValue = if (actives) 0.dp else 0.dp,
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing) // Smooth easing
     )
 
@@ -190,7 +321,10 @@ fun Searchbar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = animatedPadding)
+            .padding(
+                horizontal = animatedPadding,
+            )
+            .background(color = colorResource(R.color.DimGray))
     ) {
         SearchBar(
             query = search,
@@ -256,28 +390,25 @@ fun Searchbar(
             exit = fadeOut(animationSpec = tween(50)) + slideOutHorizontally(
                 targetOffsetX = { it },
                 animationSpec = tween(50, easing = FastOutSlowInEasing)
+            ),
+            enter = fadeIn(animationSpec = tween(50)) + slideInHorizontally(
+                initialOffsetX = {it},
+                animationSpec = tween(50, easing = FastOutSlowInEasing)
             )
         ) {
-            Card(
-                modifier = Modifier
-                    .padding(top = 33.dp)
-                    .size(45.dp)
-                    .clickable { showDialog.value = true },
-                shape = RoundedCornerShape(50.dp),
-                colors = CardDefaults.cardColors(colorResource(R.color.BurlyWood))
-            ) {
-                IconButton(
-                    onClick = { showDialog.value = true },
-                    modifier = Modifier.size(45.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = "Search",
-                        modifier = Modifier.size(30.dp),
-                        tint = colorResource(R.color.DarkSlateBlue)
-                    )
-                }
-            }
+
+                Icon(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .padding(end = 4.dp, top = 3.dp)
+                        .clickable {
+                           click()
+                        },
+                    tint = colorResource(R.color.BurlyWood),
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu Icon"
+                )
+
         }
     }
 }
@@ -428,4 +559,15 @@ fun AlertDialogSingOut(
         shape = RoundedCornerShape(17.dp)
     )
 
+}
+
+
+@Composable
+@Preview
+fun test (
+){
+    MainScreen(
+        navController = NavController(context = LocalContext.current),
+        viewModel = UserViewModel()
+    )
 }
