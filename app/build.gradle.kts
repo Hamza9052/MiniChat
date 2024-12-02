@@ -101,6 +101,7 @@ dependencies {
 
     // Dependency Injection
     implementation(libs.hilt.android)
+    implementation(libs.firebase.storage)
     // Test dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -124,4 +125,10 @@ dependencies {
     implementation ("com.google.firebase:firebase-appcheck-playintegrity:16.0.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")
     implementation("com.google.firebase:firebase-firestore:25.1.1")
+
+    //cloudinary
+    implementation ("com.cloudinary:cloudinary-android:3.0.2")
+
+    implementation("io.coil-kt.coil3:coil-compose:3.0.4")
+
 }

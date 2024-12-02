@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.TextButton
 import androidx.compose.material.contentColorFor
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
@@ -111,7 +112,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
@@ -126,7 +127,7 @@ fun MainScreen(
                         .fillMaxWidth(0.7f)
                 },
                 content = {
-                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+
                         VerticalDivider(modifier = Modifier.height(10.dp))
                         Row(
                             modifier = Modifier
@@ -156,15 +157,14 @@ fun MainScreen(
                                             .size(60.dp)
                                             .clip(RoundedCornerShape(50.dp)),
                                     )
-                                    Spacer(modifier = Modifier.weight(0.1f))
                                     Column {
                                         Text(
                                             viewModel.name,
                                             color = colorResource(R.color.BurlyWood),
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.ExtraBold,
-
-                                            )
+                                            modifier = Modifier.padding(start = 5.dp, top = 5.dp)
+                                        )
                                     }
 
                                 }
@@ -178,19 +178,21 @@ fun MainScreen(
                         NavigationDrawerItem(
                             icon = {
                                 Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Quiz Icon",
+                                    imageVector = Icons.Default.AccountBox,
+                                    contentDescription = "Profile Icon",
                                     tint = colorResource(R.color.BurlyWood)
                                 )
                             },
                             label = {
                                 Text(
-                                    text = "Quiz",
+                                    text = "Profile",
                                     color = colorResource(R.color.White)
                                 )
                             },
                             selected = false,
-                            onClick = { },
+                            onClick = {
+                                navController.navigate(Screen.Profile.route)
+                            },
                             colors = NavigationDrawerItemDefaults.colors(colorResource(R.color.DimGray))
                         )
 
@@ -214,17 +216,16 @@ fun MainScreen(
                             },
                             colors = NavigationDrawerItemDefaults.colors(colorResource(R.color.DimGray))
                         )
-                    } }
+                    }
             )
         },
         content =  {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .background(Color.DarkGray)
-
     ) {
 
         Searchbar(active, viewModel, navController, showDialog,{
@@ -283,10 +284,10 @@ fun MainScreen(
         }
 
 
-    }}
+    }
         })
-        }
 }
+
 
 
 //@Composable
@@ -311,8 +312,12 @@ fun Searchbar(
     var search by remember { mutableStateOf(user.search) }
 
     // Animated padding and visibility
-    val animatedPadding by animateDpAsState(
-        targetValue = if (actives) 0.dp else 0.dp,
+    val animatedPaddingH by animateDpAsState(
+        targetValue = 0.dp,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing) // Smooth easing
+    )
+    val animatedPaddingV by animateDpAsState(
+        targetValue = 0.dp,
         animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing) // Smooth easing
     )
 
@@ -322,10 +327,13 @@ fun Searchbar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = animatedPadding,
+                horizontal = animatedPaddingH,
+                vertical =  animatedPaddingV
             )
             .background(color = colorResource(R.color.DimGray))
     ) {
+        // Animated Logout Button
+
         SearchBar(
             query = search,
             modifier = Modifier
@@ -346,6 +354,17 @@ fun Searchbar(
             },
             leadingIcon = {
                 if (actives) {
+                    AnimatedVisibility(
+                        visible = actives,
+                        exit = fadeOut(animationSpec = tween(50)) + slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(50, easing = FastOutSlowInEasing)
+                        ),
+                        enter = fadeIn(animationSpec = tween(50)) + slideInHorizontally(
+                            initialOffsetX = {it},
+                            animationSpec = tween(50, easing = FastOutSlowInEasing)
+                        )
+                    ) {
                     IconButton(
                         onClick = { actives = false }
                     ) {
@@ -356,7 +375,33 @@ fun Searchbar(
                             tint = colorResource(R.color.BurlyWood)
                         )
                     }
+                    }
                 }else{
+                    AnimatedVisibility(
+                        visible = !actives,
+                        exit = fadeOut(animationSpec = tween(50)) + slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(50, easing = FastOutSlowInEasing)
+                        ),
+                        enter = fadeIn(animationSpec = tween(50)) + slideInHorizontally(
+                            initialOffsetX = {it},
+                            animationSpec = tween(50, easing = FastOutSlowInEasing)
+                        )
+                    ) {
+
+                        Icon(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .padding(end = 2.dp, top = 3.dp)
+                                .clickable {
+                                    click()
+                                },
+                            tint = colorResource(R.color.BurlyWood),
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu Icon"
+                        )
+
+                    }
                     search = ""
                 }
             },
@@ -384,32 +429,7 @@ fun Searchbar(
             }
         }
 
-        // Animated Logout Button
-        AnimatedVisibility(
-            visible = !actives,
-            exit = fadeOut(animationSpec = tween(50)) + slideOutHorizontally(
-                targetOffsetX = { it },
-                animationSpec = tween(50, easing = FastOutSlowInEasing)
-            ),
-            enter = fadeIn(animationSpec = tween(50)) + slideInHorizontally(
-                initialOffsetX = {it},
-                animationSpec = tween(50, easing = FastOutSlowInEasing)
-            )
-        ) {
 
-                Icon(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .padding(end = 4.dp, top = 3.dp)
-                        .clickable {
-                           click()
-                        },
-                    tint = colorResource(R.color.BurlyWood),
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu Icon"
-                )
-
-        }
     }
 }
 
@@ -562,12 +582,12 @@ fun AlertDialogSingOut(
 }
 
 
-@Composable
-@Preview
-fun test (
-){
-    MainScreen(
-        navController = NavController(context = LocalContext.current),
-        viewModel = UserViewModel()
-    )
-}
+//@Composable
+//@Preview
+//fun test (
+//){
+//    MainScreen(
+//        navController = NavController(context = LocalContext.current),
+//        viewModel = UserViewModel()
+//    )
+//}

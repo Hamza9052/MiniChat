@@ -32,7 +32,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -52,14 +51,10 @@ import androidx.navigation.NavController
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.input.KeyboardType
 import com.example.test.Constants
 import java.time.LocalDateTime
-import java.util.Calendar
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +103,7 @@ fun MessageScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {navController.navigate(Screen.Main_Screen.route) }) {
+                    IconButton(onClick = {navController.navigate(Screen.Main.route) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Localized description",

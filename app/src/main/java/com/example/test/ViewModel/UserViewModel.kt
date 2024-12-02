@@ -1,20 +1,21 @@
 package com.example.test.ViewModel
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ContentValues.TAG
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import com.example.test.API.NotificationApi
 import com.example.test.Notification.NotificationData
 import com.example.test.Notification.NotificationIn
@@ -26,7 +27,6 @@ import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
-import com.example.test.UiHome.Screen
 import com.example.test.token.AccessToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +38,7 @@ import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 import java.time.LocalDateTime
 
 class UserViewModel() : ViewModel() {
@@ -50,10 +51,13 @@ class UserViewModel() : ViewModel() {
             is UserEvent.Login -> Logins(event.user,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
             is UserEvent.signOut -> signout(event.user,event.state,context)
+            is UserEvent.Upload_Image -> upload(event.image,context)
 
         }
 
     }
+
+
 
     private val _used = MutableLiveData("")
     val usd: LiveData<String> get() = _used
@@ -102,7 +106,11 @@ class UserViewModel() : ViewModel() {
         val password = sharedPreferences.getString("password","")
             if (check.equals("true")){
                 Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
-
+                sharedPreferences.getString("user","")
+                sharedPreferences.getString("uid","")
+                sharedPreferences.getString("user","")
+                sharedPreferences.getString("name","")
+                sharedPreferences.getString("email","")
             }
 
         return check.toString()
@@ -199,6 +207,7 @@ class UserViewModel() : ViewModel() {
                                .putString("uid",id)
                                .putString("password",User.password)
                                .putString("name",name)
+                               .putString("user", userlist.toString())
                                .apply()
                        }
 
@@ -244,10 +253,11 @@ class UserViewModel() : ViewModel() {
         val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit()
             .putString("login", _isLoggedIn.value.toString())
-            .remove("")
+            .remove("name")
             .remove("email")
             .remove("uid")
             .remove("password")
+            .remove("user")
             .apply()
 
     }
@@ -625,6 +635,47 @@ class UserViewModel() : ViewModel() {
     private fun updateMessages(list: MutableList<Map<String, Any>>) {
         _messages.value = list.asReversed()
     }
+
+
+
+    private fun upload (filepath: String, context: Context) {
+
+
+            MediaManager.get().upload(filepath).unsigned("duhgxqlu").callback(object : UploadCallback {
+                override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
+                    Toast.makeText(context, "Task successful", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {
+
+                }
+
+                override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+
+                }
+
+                override fun onError(requestId: String?, error: ErrorInfo?) {
+
+                    Toast.makeText(context, "Task Not successful"+ error, Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onStart(requestId: String?) {
+
+                    Toast.makeText(context, "Start", Toast.LENGTH_SHORT).show()
+                }
+            }).dispatch()
+
+
+    }
+
+
+
+
+
+
+
+
+
 
     override fun onCleared() {
         super.onCleared()

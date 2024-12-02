@@ -15,13 +15,10 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.window.isPopupLayout
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.createGraph
+import com.example.test.Screen.Profile.ProfileScreen
 import com.example.test.UiHome.Create_Account
 import com.example.test.UiHome.Login
 import com.example.test.UiHome.MainScreen
@@ -44,7 +41,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
 
         enableEdgeToEdge()
@@ -78,14 +74,14 @@ class MainActivity : ComponentActivity() {
                 var maisn = ""
                 var save = ViewModel.check(navController.context,navController)
                 if (isLoggin.value == true || save == "true"){
-                    maisn = Screen.Main_Screen.route
+                    maisn = Screen.Main.route
                 }else{
                     maisn = Screen.Login.route
                 }
 
                 NavHost(navController = navController, startDestination = maisn){
                     composable(
-                        Screen.Main_Screen.route,
+                        Screen.Main.route,
                         enterTransition = {
                             fadeIn(animationSpec = tween(durationMillis = 500, easing = LinearOutSlowInEasing))
                         },
@@ -155,6 +151,25 @@ class MainActivity : ComponentActivity() {
                         }
                     ){
                         Create_Account( navController = navController,ViewModel,navController.context)
+                    }
+
+
+                    composable(
+                        Screen.Profile.route,
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+                            )
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { 1000 },
+                                animationSpec = tween(durationMillis = 400, easing = FastOutSlowInEasing)
+                            )
+                        }
+                    ) {
+                        ProfileScreen(navController, ViewModel) // Pass userId to MessageScreen
                     }
 
                 }
