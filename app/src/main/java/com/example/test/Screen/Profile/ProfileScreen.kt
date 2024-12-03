@@ -45,8 +45,11 @@ import androidx.navigation.ActivityNavigatorExtras
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import android.net.Uri
-import coil3.compose.rememberAsyncImagePainter
-import com.cloudinary.android.MediaManager
+import androidx.annotation.Size
+import androidx.compose.material3.CircularProgressIndicator
+
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.test.Event.UserEvent
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
@@ -56,31 +59,19 @@ import kotlin.contracts.contract
 @Composable
 fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
     val imageUri = rememberSaveable { mutableStateOf("") }
+
+    var image = ViewModel.generateSignedUrl(ViewModel.name)
     val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(navController.context)
+            .data(image)
+            .crossfade(true)
+            .build()
+    )
+    val PainterImage = rememberAsyncImagePainter(
         imageUri.value.ifEmpty {
             R.drawable.profil
         }
-        )
-    val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-        // Callback is invoked after the user selects a media item or closes the
-        // photo picker.
-
-        if (uri != null) {
-            val filePath = resolveUriToFilePath(uri, navController.context)
-            if (filePath != null){
-                Log.d("PhotoPicker", "Selected URI: $filePath")
-                ViewModel.action(UserEvent.Upload_Image(filePath),navController.context)
-                imageUri.value = uri.toString()
-            }else{
-                Log.e("PhotoPicker", "Failed to resolve file path")
-            }
-
-
-
-        } else {
-            Log.d("PhotoPicker", "No media selected")
-        }
-    }
+    )
 
 
 
@@ -95,24 +86,75 @@ fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
             modifier = Modifier
                 .size(150.dp)
         ) {
-            Image(
-                painter = painter,
-                contentDescription = "Image of Profile",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(150.dp)
-                    .clip(RoundedCornerShape(75.dp))
-            )
-            IconButton(
-                onClick = {
-                    pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+            if (painter.state is coil.compose.AsyncImagePainter.State.Error){
+                val pickMedia = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+                    // Callback is invoked after the user selects a media item or closes the
+                    // photo picker.
+                    if (uri != null) {
+                        val filePath = resolveUriToFilePath(uri, navController.context)
+                        if (filePath != null){
+                            Log.d("PhotoPicker", "Selected URI: $filePath")
+                            ViewModel.action(UserEvent.Upload_Image(filePath),navController.context)
+                            imageUri.value = uri.toString()
+                        }else{
+                            Log.e("PhotoPicker", "Failed to resolve file path")
+                        }
+                    } else {
+                        Log.d("PhotoPicker", "No media selected")
+                    }
                 }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Image,
-                    contentDescription = "Pick Picture",
-                    tint = Color.White
+                if (PainterImage.state is coil.compose.AsyncImagePainter.State.Loading){
+                    CircularProgressIndicator(
+                        color = colorResource(R.color.BurlyWood),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                Image(
+                    painter = PainterImage,
+                    contentDescription = "Image of Profile",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(RoundedCornerShape(75.dp))
                 )
+                IconButton(
+                    onClick = {
+                        pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Pick Picture",
+                        tint = Color.White
+                    )
+                }
+            }
+            else{
+                if (painter.state is coil.compose.AsyncImagePainter.State.Loading){
+                    CircularProgressIndicator(
+                        color = colorResource(R.color.BurlyWood),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                Image(
+                    painter = painter,
+                    contentDescription = "Image of Profile",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(RoundedCornerShape(75.dp))
+                )
+                IconButton(
+                    onClick = {
+                        "pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))"
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Pick Picture",
+                        tint = Color.White
+                    )
+                }
             }
 
 

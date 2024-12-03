@@ -130,5 +130,5 @@ dependencies {
     implementation ("com.cloudinary:cloudinary-android:3.0.2")
 
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
-
+    implementation ("io.coil-kt:coil-compose:2.4.0")
 }
