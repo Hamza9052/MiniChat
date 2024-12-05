@@ -67,7 +67,7 @@ fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
             .crossfade(true)
             .build()
     )
-    val PainterImage = rememberAsyncImagePainter(
+    val PainterUri = rememberAsyncImagePainter(
         imageUri.value.ifEmpty {
             R.drawable.profil
         }
@@ -103,14 +103,14 @@ fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
                         Log.d("PhotoPicker", "No media selected")
                     }
                 }
-                if (PainterImage.state is coil.compose.AsyncImagePainter.State.Loading){
+                if (PainterUri.state is coil.compose.AsyncImagePainter.State.Loading){
                     CircularProgressIndicator(
                         color = colorResource(R.color.BurlyWood),
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
                 Image(
-                    painter = PainterImage,
+                    painter = PainterUri,
                     contentDescription = "Image of Profile",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

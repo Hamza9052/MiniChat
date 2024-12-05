@@ -2,6 +2,7 @@ package com.example.test.UiHome
 
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,7 +53,11 @@ import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.test.Constants
 import java.time.LocalDateTime
 
@@ -79,7 +84,14 @@ fun MessageScreen(
         viewModel.fetchUserFirstName(userId)
         viewModel.GetMessage(userId)
     }
-
+    val image = viewModel.generateSignedUrl(userId)
+    val painterUri = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(navController.context)
+            .data(image)
+            .crossfade(true)
+            .error(R.drawable.profil)
+            .build()
+    )
     val firstName by viewModel.usd.observeAsState(userId)
 
 
@@ -114,13 +126,14 @@ fun MessageScreen(
                 },
                 actions = {
 
-                        Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            tint = colorResource(R.color.BurlyWood),
-                            contentDescription = "Localized description",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .width(40.dp)
+                    Image(
+                        painter = painterUri,
+                        contentDescription = "profile",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(50.dp)),
+
                         )
 
                 }

@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -93,12 +94,17 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import kotlinx.coroutines.launch
+import kotlin.text.ifEmpty
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -111,7 +117,13 @@ fun MainScreen(
     val drawerState = rememberDrawerState (initialValue = DrawerValue.Closed )
     val scope = rememberCoroutineScope()
 
-
+    val profile = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(navController.context)
+            .data(viewModel.generateSignedUrl(viewModel.name))
+            .crossfade(true)
+            .error(R.drawable.profil)
+            .build()
+    )
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -151,7 +163,7 @@ fun MainScreen(
 
                                 Row {
                                     Image(
-                                        painter = painterResource(R.drawable.profil),
+                                        painter = profile,
                                         contentDescription = "profile",
                                         modifier = Modifier
                                             .size(60.dp)
@@ -263,20 +275,32 @@ fun MainScreen(
 
             items(viewModel.userlist.value.size) { item ->
                 val user = viewModel.userlist.value[item]
+                val image = viewModel.ImageUri.value[item]
 
-                LaunchedEffect(user) {
+
+                LaunchedEffect("") {
                     viewModel.getlastmessage(user)
                 }
 
-                val lastMessage = viewModel.last.value[user]
 
-                if (lastMessage == "" || viewModel.name == user) {
-                    Log.e("message is Empty", lastMessage.toString())
-                    Log.e("test id for saga ", user)
-                } else {
-                    Spacer(modifier = Modifier.height(15.dp))
-                    listItem(user, navController, lastMessage.toString())
-                }
+
+
+                    val lastMessage = viewModel.last.value[user]
+                    if (lastMessage == "" || viewModel.name == user) {
+                        Log.e("message is Empty", lastMessage.toString())
+                        Log.e("test id for saga ", user)
+
+                    } else {
+                        Spacer(modifier = Modifier.height(15.dp))
+                        listItem(user, navController, lastMessage.toString(),image)
+                    }
+
+
+
+
+
+
+
 
 
 
@@ -469,7 +493,16 @@ fun listItem(
     name: String,
     navController: NavController,
     message: String,
+    image:String
 ) {
+    val painterUri = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(navController.context)
+            .data(image)
+            .crossfade(true)
+            .error(R.drawable.profil)
+            .build()
+    )
+
 
 
     Row(
@@ -494,14 +527,22 @@ fun listItem(
         ) {
 
             Row {
-                Image(
-                    painter = painterResource(R.drawable.profil),
-                    contentDescription = "profile",
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(50.dp)),
-
+                if (painterUri.state is coil.compose.AsyncImagePainter.State.Loading){
+                    CircularProgressIndicator(
+                        color = colorResource(R.color.BurlyWood),
                     )
+                }
+                    Image(
+                        painter = painterUri,
+                        contentDescription = "profile",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(50.dp)),
+
+                        )
+
+
                 Spacer(modifier = Modifier.weight(0.1f))
                 Column {
                     Text(

@@ -6,22 +6,33 @@ import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
+import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.cloudinary.Cloudinary
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.cloudinary.android.signed.Signature
+import com.cloudinary.android.signed.SignatureProvider
 import com.example.test.API.NotificationApi
 import com.example.test.Notification.NotificationData
 import com.example.test.Notification.NotificationIn
 import com.example.test.Constants
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
+import com.example.test.R
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -29,11 +40,13 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.example.test.token.AccessToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
@@ -68,6 +81,8 @@ class UserViewModel() : ViewModel() {
     private val firstNames = MutableStateFlow(mutableListOf<String>())
     val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
 
+    private val _ImageUri = MutableStateFlow(mutableListOf<String>())
+    val ImageUri:StateFlow<List<String>> = _ImageUri.asStateFlow()
     private val _isLoggedIn = MutableStateFlow(false) // Default to logged out
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
@@ -278,6 +293,8 @@ class UserViewModel() : ViewModel() {
                             val firs_name = document.getString("first_name")
                             if (firs_name != null) {
                                 firstNames.value.add(firs_name)
+                                val name = generateSignedUrl(firs_name)
+                                _ImageUri.value.add(name!!)
                             }
                         }
                     }
@@ -573,6 +590,8 @@ class UserViewModel() : ViewModel() {
 
         val collectionPath1 = "$username$name"
         val collectionPath2 = "$name$username"
+
+
         Firebase.firestore
             .collection(Constants.MESSAGES)
             .document("allmessage")
@@ -581,6 +600,7 @@ class UserViewModel() : ViewModel() {
             .limitToLast(1)
             .get()
             .addOnSuccessListener { snapshot1 ->
+
                 if (!snapshot1.isEmpty) {
                     // Process the result from collectionPath1
                     snapshot1?.documents?.lastOrNull()?.let { doc ->
@@ -605,6 +625,7 @@ class UserViewModel() : ViewModel() {
                         .limitToLast(1)
                         .get()
                         .addOnSuccessListener { snapshot2 ->
+
                             snapshot2?.documents?.lastOrNull()?.let { doc ->
                                 val lastMsg = doc.getString("message").orEmpty()
                                 val currentLast = lastmessage.value[username]
@@ -617,14 +638,19 @@ class UserViewModel() : ViewModel() {
                                 // No messages found for the user
                                 lastmessage.update { it.toMutableMap().apply { this[username] = "" } }
                             }
+
                         }
                         .addOnFailureListener { e ->
+
                             Log.e("getLastMessage", "Error querying collectionPath2", e)
+
                         }
                 }
+
             }
             .addOnFailureListener { e ->
                 Log.e("getLastMessage", "Error querying collectionPath1", e)
+
             }
     }
 
@@ -637,16 +663,23 @@ class UserViewModel() : ViewModel() {
     }
 
 
-
+    private var config: HashMap<String, String> = HashMap()
     private fun upload (filepath: String, context: Context) {
 
-
-            MediaManager.get().upload(filepath).unsigned("duhgxqlu").callback(object : UploadCallback {
+        config.put("cloud_name", "dayyltanu")
+        config.put("api_key", "275544193634372")
+        config.put("api_secret", "3qyjZKD3o43_PQCIr9xoM91Lgs0")
+        MediaManager.init(context,config)
+            MediaManager.get().upload(filepath)
+                .option("public_id",name)
+                .callback(object : UploadCallback {
                 override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
                     Toast.makeText(context, "Task successful", Toast.LENGTH_SHORT).show()
+
                 }
 
                 override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {
+
 
                 }
 
@@ -657,6 +690,7 @@ class UserViewModel() : ViewModel() {
                 override fun onError(requestId: String?, error: ErrorInfo?) {
 
                     Toast.makeText(context, "Task Not successful"+ error, Toast.LENGTH_SHORT).show()
+
                 }
 
                 override fun onStart(requestId: String?) {
@@ -669,8 +703,22 @@ class UserViewModel() : ViewModel() {
     }
 
 
+     @SuppressLint("SuspiciousIndentation")
+     fun generateSignedUrl(publicId: String): String? {
+        val config = mutableMapOf<String, Any>()
+        config["cloud_name"] = "dayyltanu"
+        config["api_key"] = "275544193634372"
+        config["api_secret"] = "3qyjZKD3o43_PQCIr9xoM91Lgs0"
 
+        val cloudinary = Cloudinary(config)
+        val signedUrl = cloudinary.url()
+            .secure(true)  // Ensure the URL is HTTPS
+            .signed(true)  // Private image
+            .generate(publicId)
 
+    // Return the signed URL for the image
+             return signedUrl
+    }
 
 
 
