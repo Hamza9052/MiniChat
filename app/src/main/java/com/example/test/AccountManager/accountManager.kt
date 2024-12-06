@@ -14,9 +14,18 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import androidx.navigation.NavController
+import com.example.test.Event.Loginstate
+import com.example.test.Event.UserEvent
+import com.example.test.UiHome.Screen
+import com.example.test.ViewModel.UserViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.storage.FirebaseStorage
 
 class accountManager(
-    private val context: Context
+    private val context: Context,
+    private val VM: UserViewModel,
+    private var state:Loginstate
 ) {
     private val credentialManager = CredentialManager.create(context)
     suspend fun login(email:String, password: String): Result{
@@ -49,8 +58,12 @@ class accountManager(
 
             val credentialResponse = credential.credential as? PasswordCredential
             ?: return ResultIn.Failure
-            ResultIn.Success(credentialResponse.id)
+            state.email = credentialResponse.id
+            state.password = credentialResponse.password
 
+
+
+            ResultIn.Success(credentialResponse.id)
         }catch (e: GetCredentialCancellationException){
             e.printStackTrace()
             ResultIn.Cancelled
