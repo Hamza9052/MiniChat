@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ){
 
-                        Login(  navController = navController,ViewModel,navController.context,ViewModel.state,ViewModel::logAction)
+                        Login(  navController = navController,ViewModel,navController.context,ViewModel.states,ViewModel::logAction)
                     }
 
 
