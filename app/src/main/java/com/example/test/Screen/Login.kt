@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,6 +78,36 @@ fun Login(
     var user by remember {
         mutableStateOf(user())
     }
+    LaunchedEffect(key1 = true) {
+        val result = accountManager.Logging()
+        onAction(LoginAction.Logging(result))
+
+    }
+    LaunchedEffect(key1 = state.loggedInUser) {
+        if (state.loggedInUser != null){
+
+            if (
+                user.password.isEmpty() ||
+                user.emial.isEmpty() ||
+                user.password.isEmpty() && user.emial.isEmpty() ){
+                Toast.makeText(
+                    navController.context,
+                    "password or email is empty!",
+                    Toast.LENGTH_SHORT).show().toString()
+
+            }else {
+
+                ViewModel.action(UserEvent.Login(user) { state ->
+                    navController.navigate(Screen.Main.route)
+
+                }, context)
+            }
+
+        }
+    }
+
+
+
    Column(
        modifier = Modifier
            .fillMaxSize()
@@ -111,8 +142,8 @@ fun Login(
                    user = user.copy(
                        emial = it
                    )
-//                   state.email = it
-//                   onAction(LoginAction.OnEmailChange(state.email))
+                   state.email = it
+                   onAction(LoginAction.OnEmailChange(state.email))
                },label = {
                Text(
                    text = "Email",
@@ -138,8 +169,8 @@ fun Login(
                user = user.copy(
                    password = it
                )
-//               state.password = it
-//               onAction(LoginAction.OnPasswordChange(state.password))
+               state.password = it
+               onAction(LoginAction.OnPasswordChange(state.password))
            },label = {
                Text(
                    text = "Password",
@@ -185,19 +216,6 @@ fun Login(
        )
 
 
-//       Spacer(modifier = Modifier.weight(0.2f))
-
-//      Row {
-//          val Checked = remember { mutableStateOf(false)}
-//          Checkbox(
-//             checked =Checked.value,
-//              onCheckedChange = {ischecked->
-//                  Checked.value = ischecked
-//
-//              },
-//
-//          )
-//      }
        Spacer(modifier = Modifier.weight(0.2f))
        Button(
            onClick = {
@@ -210,21 +228,20 @@ fun Login(
                        "password or email is empty!",
                        Toast.LENGTH_SHORT).show().toString()
 
-               }else{
-                   ViewModel.action(UserEvent.Login(user){state->
-                           navController.navigate(Screen.Main.route)
+               }else {
+                   scope.launch {
 
-                   },context)
-//                   scope.launch{
-//
-//                       val rustl = accountManager.login(
-//                           state.email,
-//                           state.password
-//                       )
-//                       onAction(LoginAction.Login(rustl))
-//                   }
+                       val rustl = accountManager.login(
+                           state.email,
+                           state.password
+                       )
+                       onAction(LoginAction.Login(rustl))
+                   }
 
                }
+
+
+
 
            },
            colors = ButtonDefaults.buttonColors(colorResource(R.color.DarkSlateBlue)),

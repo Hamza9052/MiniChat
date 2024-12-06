@@ -103,6 +103,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.test.AccountManager.accountManager
 import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 
@@ -124,6 +125,7 @@ fun MainScreen(
             .error(R.drawable.profil)
             .build()
     )
+
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -276,10 +278,19 @@ fun MainScreen(
             items(viewModel.userlist.value.size) { item ->
                 val user = viewModel.userlist.value[item]
                 val image = viewModel.ImageUri.value[item]
-                Log.d("image", "MainScreen:$image ")
+
                 LaunchedEffect(user){
                     viewModel.getlastmessage(user)
                 }
+                val painterUri = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(navController.context)
+                        .data(image)
+                        .crossfade(true)
+                        .error(R.drawable.profil)
+                        .build()
+                )
+
+
 
 
 
@@ -288,8 +299,13 @@ fun MainScreen(
                         Log.e("message is Empty", lastMessage.toString())
                         Log.e("test id for saga ", user)
                     } else {
+                        if (painterUri.state is coil.compose.AsyncImagePainter.State.Loading){
+                            CircularProgressIndicator(
+                                color = colorResource(R.color.BurlyWood),
+                            )
+                        }
                         Spacer(modifier = Modifier.height(15.dp))
-                        listItem(user, navController, lastMessage.toString(),image)
+                        listItem(user, navController, lastMessage.toString(),painterUri)
                     }
 
 
@@ -484,15 +500,8 @@ fun listItem(
     name: String,
     navController: NavController,
     message: String,
-    image:String
+    painterUri:AsyncImagePainter
 ) {
-    val painterUri = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(navController.context)
-            .data(image)
-            .crossfade(true)
-            .error(R.drawable.profil)
-            .build()
-    )
 
 
 
@@ -518,11 +527,7 @@ fun listItem(
         ) {
 
             Row {
-                if (painterUri.state is coil.compose.AsyncImagePainter.State.Loading){
-                    CircularProgressIndicator(
-                        color = colorResource(R.color.BurlyWood),
-                    )
-                }
+
                     Image(
                         painter = painterUri,
                         contentDescription = "profile",
