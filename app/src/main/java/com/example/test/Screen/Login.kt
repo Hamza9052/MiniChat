@@ -52,6 +52,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.test.AccountManager.LoginAction
+import com.example.test.AccountManager.ResultIn
 import com.example.test.AccountManager.accountManager
 import com.example.test.Event.Loginstate
 import com.example.test.Event.UserEvent
@@ -72,7 +73,7 @@ fun Login(
 ){
     val scope = rememberCoroutineScope()
     val accountManager = remember {
-        accountManager(navController.context)
+        accountManager(navController.context,ViewModel,state)
     }
     var showPassword by remember { mutableStateOf(value = false) }
     var user by remember {
@@ -80,28 +81,19 @@ fun Login(
     }
     LaunchedEffect(key1 = true) {
         val result = accountManager.Logging()
-        onAction(LoginAction.Logging(result))
+        if (result is ResultIn.Success) {
+            onAction(LoginAction.Logging(result))
+        }
+
 
     }
     LaunchedEffect(key1 = state.loggedInUser) {
         if (state.loggedInUser != null){
 
-            if (
-                user.password.isEmpty() ||
-                user.emial.isEmpty() ||
-                user.password.isEmpty() && user.emial.isEmpty() ){
-                Toast.makeText(
-                    navController.context,
-                    "password or email is empty!",
-                    Toast.LENGTH_SHORT).show().toString()
-
-            }else {
-
-                ViewModel.action(UserEvent.Login(user) { state ->
+                ViewModel.action(UserEvent.Login(state.email,state.password) { state ->
                     navController.navigate(Screen.Main.route)
 
                 }, context)
-            }
 
         }
     }
@@ -137,7 +129,7 @@ fun Login(
        Spacer(modifier = Modifier.weight(0.3f))
 
        OutlinedTextField(
-           value = user.emial ,
+           value = state.email ,
                onValueChange ={
                    user = user.copy(
                        emial = it
@@ -164,7 +156,7 @@ fun Login(
        Spacer(modifier = Modifier.weight(0.1f))
 
        OutlinedTextField(
-           value = user.password ,
+           value = state.password ,
            onValueChange ={
                user = user.copy(
                    password = it
@@ -220,25 +212,27 @@ fun Login(
        Button(
            onClick = {
                if (
-                   user.password.isEmpty() ||
-                   user.emial.isEmpty() ||
-                   user.password.isEmpty() && user.emial.isEmpty() ){
+                   state.password.isEmpty() ||
+                   state.email.isEmpty() ||
+                   state.email.isBlank() ||
+                   state.password.isBlank() ||
+                   state.password.isEmpty() && state.email.isEmpty() ){
                    Toast.makeText(
                        navController.context,
                        "password or email is empty!",
-                       Toast.LENGTH_SHORT).show().toString()
-
-               }else {
-                   scope.launch {
-
-                       val rustl = accountManager.login(
-                           state.email,
-                           state.password
-                       )
-                       onAction(LoginAction.Login(rustl))
-                   }
+                       Toast.LENGTH_SHORT).show()
+                   return@Button
 
                }
+               scope.launch {
+
+                   val rustl = accountManager.login(
+                       state.email,
+                       state.password
+                   )
+                   onAction(LoginAction.Login(rustl))
+               }
+
 
 
 
