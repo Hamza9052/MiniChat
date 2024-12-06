@@ -1,61 +1,90 @@
 package com.example.test.ViewModel
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.ContentValues.TAG
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
-import androidx.core.net.toUri
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.cloudinary.Cloudinary
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
-import com.cloudinary.android.signed.Signature
-import com.cloudinary.android.signed.SignatureProvider
 import com.example.test.API.NotificationApi
+import com.example.test.AccountManager.LoginAction
+import com.example.test.AccountManager.Result
 import com.example.test.Notification.NotificationData
 import com.example.test.Notification.NotificationIn
 import com.example.test.Constants
+import com.example.test.Event.Loginstate
 import com.example.test.Event.UserEvent
 import com.example.test.Event.user
-import com.example.test.R
+import com.example.test.UiHome.Screen
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.example.test.token.AccessToken
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.io.File
 import java.time.LocalDateTime
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 class UserViewModel() : ViewModel() {
 
+    var state by mutableStateOf(Loginstate())
+        private set
+
+
+    fun logAction(loginAction: LoginAction){
+        when(loginAction){
+            is LoginAction.Login -> {
+                when(loginAction.result){
+                    Result.Cancelled -> {
+                        state = state.copy(
+                            errorMessage = "Login was Cancelled"
+                        )
+                    }
+                    Result.Failure -> {
+                        state = state.copy(
+                            errorMessage = "Login was Failed"
+                        )
+                    }
+                    is Result.Success -> {
+                        state = state.copy(
+                            loggedInUser = loginAction.result.name
+                        )
+                    }
+                }
+            }
+            is LoginAction.OnEmailChange -> {
+                state = state.copy(
+                    email = loginAction.email
+                )
+            }
+            is LoginAction.OnPasswordChange -> {
+                state = state.copy(
+                    password = loginAction.password
+                )
+            }
+        }
+    }
 
 
 
@@ -63,12 +92,14 @@ class UserViewModel() : ViewModel() {
         when(event){
             is UserEvent.Login -> Logins(event.user,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
-            is UserEvent.signOut -> signout(event.user,event.state,context)
+            is UserEvent.signOut -> signout(event.state,context)
             is UserEvent.Upload_Image -> upload(event.image,context)
 
         }
 
     }
+
+
 
 
 
@@ -113,23 +144,23 @@ class UserViewModel() : ViewModel() {
      * */
 
 
-    @SuppressLint("SuspiciousIndentation")
-    fun check(context: Context, navController: NavController):String {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val check = sharedPreferences.getString("login","")
-        val email=sharedPreferences.getString("email","")
-        val password = sharedPreferences.getString("password","")
-            if (check.equals("true")){
-                Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
-                sharedPreferences.getString("user","")
-                sharedPreferences.getString("uid","")
-                sharedPreferences.getString("user","")
-                sharedPreferences.getString("name","")
-                sharedPreferences.getString("email","")
-            }
-
-        return check.toString()
-    }
+//    @SuppressLint("SuspiciousIndentation")
+//    fun check(context: Context, navController: NavController):String {
+//        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+//        val check = sharedPreferences.getString("login","")
+//        val email=sharedPreferences.getString("email","")
+//        val password = sharedPreferences.getString("password","")
+//            if (check.equals("true")){
+//                Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
+//                sharedPreferences.getString("user","")
+//                sharedPreferences.getString("uid","")
+//                sharedPreferences.getString("user","")
+//                sharedPreferences.getString("name","")
+//                sharedPreferences.getString("email","")
+//            }
+//
+//        return check.toString()
+//    }
     private var token = MutableStateFlow("")
 
 
@@ -208,23 +239,13 @@ class UserViewModel() : ViewModel() {
                                Log.e("token Failed", "Logins: ${task.exception}", )
                            }
                        }
-                   _isLoggedIn.value = true
-
                    FirebaseFirestore.getInstance()
                        .collection("users")
                        .document(id).get()
                        .addOnSuccessListener { document ->
                            name = document.getString("first_name").toString()
-                           val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                           sharedPreferences.edit()
-                               .putString("login", _isLoggedIn.value.toString())
-                               .putString("email",User.emial)
-                               .putString("uid",id)
-                               .putString("password",User.password)
-                               .putString("name",name)
-                               .putString("user", userlist.toString())
-                               .apply()
                        }
+                   _isLoggedIn.value = true
 
 
 
@@ -249,7 +270,7 @@ class UserViewModel() : ViewModel() {
      *this function  for signOut
      * */
 
-    private fun signout(User:user,state: (state: Boolean) -> Unit, context: Context) {
+    private fun signout(state: (state: Boolean) -> Unit, context: Context) {
 
             Log.e("logout", "im here")
             Firebase.auth.signOut()
@@ -264,16 +285,8 @@ class UserViewModel() : ViewModel() {
                 }
             }
         _isLoggedIn.value = false
-            // Clear user data from SharedPreferences
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit()
-            .putString("login", _isLoggedIn.value.toString())
-            .remove("name")
-            .remove("email")
-            .remove("uid")
-            .remove("password")
-            .remove("user")
-            .apply()
+
+
 
     }
 
@@ -582,9 +595,10 @@ class UserViewModel() : ViewModel() {
 
 
 
-    private val lastmessage = MutableStateFlow(mutableMapOf<String,String>())
-    val last:StateFlow<Map<String,String>> = lastmessage.asStateFlow()
-
+//    private val lastmessage = MutableStateFlow(mutableMapOf<String,String>())
+    private val lastMessage = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
+//    val last:StateFlow<Map<String,String>> = lastMessage.asStateFlow()
+    val last: LiveData<MutableMap<String, String>> = lastMessage
     fun getlastmessage(username: String) {
 
 
@@ -605,15 +619,16 @@ class UserViewModel() : ViewModel() {
                     // Process the result from collectionPath1
                     snapshot1?.documents?.lastOrNull()?.let { doc ->
                         val lastMsg = doc.getString("message").orEmpty()
-                        val currentLast = lastmessage.value[username]
+                        val currentLast = lastMessage.value?.get(username)
 
                         // Update only if the message changes
                         if (currentLast != lastMsg) {
-                            lastmessage.update { it.toMutableMap().apply { this[username] = lastMsg } }
+
+                            lastMessage.value?.put( username,lastMsg )
                         }
                     } ?: run {
                         // No messages found for the user
-                        lastmessage.update { it.toMutableMap().apply { this[username] = "" } }
+                        lastMessage.value?.put( username,"" )
                     }
                 } else {
                     // Check the second collection path
@@ -628,15 +643,16 @@ class UserViewModel() : ViewModel() {
 
                             snapshot2?.documents?.lastOrNull()?.let { doc ->
                                 val lastMsg = doc.getString("message").orEmpty()
-                                val currentLast = lastmessage.value[username]
+                                val currentLast = lastMessage.value?.get(username)
 
                                 // Update only if the message changes
                                 if (currentLast != lastMsg) {
-                                    lastmessage.update { it.toMutableMap().apply { this[username] = lastMsg } }
+
+                                    lastMessage.value?.put( username,lastMsg )
                                 }
                             } ?: run {
                                 // No messages found for the user
-                                lastmessage.update { it.toMutableMap().apply { this[username] = "" } }
+                                lastMessage.value?.put( username,"" )
                             }
 
                         }
@@ -666,9 +682,9 @@ class UserViewModel() : ViewModel() {
     private var config: HashMap<String, String> = HashMap()
     private fun upload (filepath: String, context: Context) {
 
-        config.put("cloud_name", "*********")
-        config.put("api_key", "************")
-        config.put("api_secret", "********************")
+        config.put("cloud_name", "dayyltanu")
+        config.put("api_key", "275544193634372")
+        config.put("api_secret", "3qyjZKD3o43_PQCIr9xoM91Lgs0")
         MediaManager.init(context,config)
             MediaManager.get().upload(filepath)
                 .option("public_id",name)
@@ -706,9 +722,9 @@ class UserViewModel() : ViewModel() {
      @SuppressLint("SuspiciousIndentation")
      fun generateSignedUrl(publicId: String): String? {
         val config = mutableMapOf<String, Any>()
-        config["cloud_name"] = "**********"
-        config["api_key"] = "***************"
-        config["api_secret"] = "***********************"
+        config["cloud_name"] = "dayyltanu"
+        config["api_key"] = "275544193634372"
+        config["api_secret"] = "3qyjZKD3o43_PQCIr9xoM91Lgs0"
 
         val cloudinary = Cloudinary(config)
         val signedUrl = cloudinary.url()
@@ -730,3 +746,21 @@ class UserViewModel() : ViewModel() {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
