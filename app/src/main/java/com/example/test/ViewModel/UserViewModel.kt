@@ -682,9 +682,9 @@ class UserViewModel() : ViewModel() {
     private var config: HashMap<String, String> = HashMap()
     private fun upload (filepath: String, context: Context) {
 
-        config.put("cloud_name", "dayyltanu")
-        config.put("api_key", "275544193634372")
-        config.put("api_secret", "3qyjZKD3o43_PQCIr9xoM91Lgs0")
+        config.put("cloud_name", "***********")
+        config.put("api_key", "***********")
+        config.put("api_secret", "***********")
         MediaManager.init(context,config)
             MediaManager.get().upload(filepath)
                 .option("public_id",name)
@@ -722,9 +722,9 @@ class UserViewModel() : ViewModel() {
      @SuppressLint("SuspiciousIndentation")
      fun generateSignedUrl(publicId: String): String? {
         val config = mutableMapOf<String, Any>()
-        config["cloud_name"] = "dayyltanu"
-        config["api_key"] = "275544193634372"
-        config["api_secret"] = "3qyjZKD3o43_PQCIr9xoM91Lgs0"
+        config["cloud_name"] = "**********************"
+        config["api_key"] = "***********"
+        config["api_secret"] = "**********************"
 
         val cloudinary = Cloudinary(config)
         val signedUrl = cloudinary.url()
