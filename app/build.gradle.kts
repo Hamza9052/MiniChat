@@ -121,14 +121,19 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.ui)
 
+    // Firebase
     implementation ("com.google.firebase:firebase-appcheck-safetynet:16.0.1")
     implementation ("com.google.firebase:firebase-appcheck-playintegrity:16.0.1")
     implementation("com.google.auth:google-auth-library-oauth2-http:1.18.0")
     implementation("com.google.firebase:firebase-firestore:25.1.1")
 
-    //cloudinary
+    // Cloudinary
     implementation ("com.cloudinary:cloudinary-android:3.0.2")
 
+    // Coil
     implementation("io.coil-kt.coil3:coil-compose:3.0.4")
     implementation ("io.coil-kt:coil-compose:2.4.0")
+
+    // Credential Saving
+    implementation ("androidx.security:security-crypto:1.1.0-alpha06")
 }

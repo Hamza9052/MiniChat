@@ -4,6 +4,7 @@ package com.example.test.UiHome
 
 import android.content.Context
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,20 +50,29 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.test.AccountManager.LoginAction
+import com.example.test.AccountManager.accountManager
+import com.example.test.Event.Loginstate
 import com.example.test.Event.UserEvent
 
 import com.example.test.Event.user
 import com.example.test.R
 import com.example.test.ViewModel.UserViewModel
+import kotlinx.coroutines.launch
 
 @Preview
 @Composable
 fun Login(
     navController: NavController,
     ViewModel: UserViewModel,
-    context: Context
+    context: Context,
+    state : Loginstate,
+    onAction:(LoginAction) -> Unit
 ){
-
+    val scope = rememberCoroutineScope()
+    val accountManager = remember {
+        accountManager(navController.context)
+    }
     var showPassword by remember { mutableStateOf(value = false) }
     var user by remember {
         mutableStateOf(user())
@@ -100,6 +111,8 @@ fun Login(
                    user = user.copy(
                        emial = it
                    )
+//                   state.email = it
+//                   onAction(LoginAction.OnEmailChange(state.email))
                },label = {
                Text(
                    text = "Email",
@@ -122,11 +135,11 @@ fun Login(
        OutlinedTextField(
            value = user.password ,
            onValueChange ={
-               user =
-                   user.copy(
+               user = user.copy(
                    password = it
                )
-
+//               state.password = it
+//               onAction(LoginAction.OnPasswordChange(state.password))
            },label = {
                Text(
                    text = "Password",
@@ -202,6 +215,15 @@ fun Login(
                            navController.navigate(Screen.Main.route)
 
                    },context)
+//                   scope.launch{
+//
+//                       val rustl = accountManager.login(
+//                           state.email,
+//                           state.password
+//                       )
+//                       onAction(LoginAction.Login(rustl))
+//                   }
+
                }
 
            },

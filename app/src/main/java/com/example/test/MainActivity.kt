@@ -15,9 +15,12 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.test.Event.UserEvent
 import com.example.test.Screen.Profile.ProfileScreen
 import com.example.test.UiHome.Create_Account
 import com.example.test.UiHome.Login
@@ -68,18 +71,21 @@ class MainActivity : ComponentActivity() {
                             }).check()
                     }
 
+
                 }
 
-                var isLoggin = ViewModel.isLoggedIn.collectAsState()
-                var maisn = ""
-                var save = ViewModel.check(navController.context,navController)
-                if (isLoggin.value == true || save == "true"){
-                    maisn = Screen.Main.route
-                }else{
-                    maisn = Screen.Login.route
-                }
+//                var isLoggin = ViewModel.isLoggedIn.collectAsState()
+//                var save = ViewModel.check(navController.context,navController)
 
-                NavHost(navController = navController, startDestination = maisn){
+
+
+
+
+
+
+
+
+                NavHost(navController = navController, startDestination = Screen.Login.route){
                     composable(
                         Screen.Main.route,
                         enterTransition = {
@@ -131,7 +137,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ){
 
-                        Login(  navController = navController,ViewModel,navController.context)
+                        Login(  navController = navController,ViewModel,navController.context,ViewModel.state,ViewModel::logAction)
                     }
 
 

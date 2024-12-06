@@ -106,7 +106,7 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 
-@SuppressLint("StateFlowValueCalledInComposition")
+@SuppressLint("StateFlowValueCalledInComposition", "SuspiciousIndentation")
 @Composable
 fun MainScreen(
     viewModel: UserViewModel,
@@ -253,7 +253,7 @@ fun MainScreen(
                 onDismissRequest = { showDialog.value = false },
                 onConfirmation = {
                     viewModel.action(
-                        UserEvent.signOut(user()) { state ->
+                        UserEvent.signOut() { state ->
                             if (state) {
                                 showDialog.value = false
                                 navController.navigate(Screen.Login.route)
@@ -276,30 +276,21 @@ fun MainScreen(
             items(viewModel.userlist.value.size) { item ->
                 val user = viewModel.userlist.value[item]
                 val image = viewModel.ImageUri.value[item]
-
-
-                LaunchedEffect("") {
+                Log.d("image", "MainScreen:$image ")
+                LaunchedEffect(user){
                     viewModel.getlastmessage(user)
                 }
 
 
 
-
-                    val lastMessage = viewModel.last.value[user]
-                    if (lastMessage == "" || viewModel.name == user) {
+                    val lastMessage = viewModel.last.value?.get(user)
+                    if (lastMessage == "" || viewModel.name == user || lastMessage == null) {
                         Log.e("message is Empty", lastMessage.toString())
                         Log.e("test id for saga ", user)
-
                     } else {
                         Spacer(modifier = Modifier.height(15.dp))
                         listItem(user, navController, lastMessage.toString(),image)
                     }
-
-
-
-
-
-
 
 
 
@@ -352,7 +343,7 @@ fun Searchbar(
             .fillMaxWidth()
             .padding(
                 horizontal = animatedPaddingH,
-                vertical =  animatedPaddingV
+                vertical = animatedPaddingV
             )
             .background(color = colorResource(R.color.DimGray))
     ) {
