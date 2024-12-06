@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RestrictTo
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -45,10 +47,13 @@ import retrofit2.Response
 import java.time.LocalDateTime
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.colorResource
+import com.example.test.AccountManager.ResultIn
+import com.example.test.R
 
 class UserViewModel() : ViewModel() {
 
-    var state by mutableStateOf(Loginstate())
+    var states by mutableStateOf(Loginstate())
         private set
 
 
@@ -57,31 +62,57 @@ class UserViewModel() : ViewModel() {
             is LoginAction.Login -> {
                 when(loginAction.result){
                     Result.Cancelled -> {
-                        state = state.copy(
+                        states = states.copy(
                             errorMessage = "Login was Cancelled"
                         )
                     }
                     Result.Failure -> {
-                        state = state.copy(
+                        states = states.copy(
                             errorMessage = "Login was Failed"
                         )
                     }
                     is Result.Success -> {
-                        state = state.copy(
+                        states = states.copy(
                             loggedInUser = loginAction.result.name
                         )
                     }
                 }
             }
             is LoginAction.OnEmailChange -> {
-                state = state.copy(
+                states = states.copy(
                     email = loginAction.email
                 )
             }
             is LoginAction.OnPasswordChange -> {
-                state = state.copy(
+                states = states.copy(
                     password = loginAction.password
                 )
+            }
+
+            is LoginAction.Logging ->{
+                when(loginAction.result){
+                    ResultIn.Cancelled -> {
+                        states = states.copy(
+                            errorMessage = "Login was Cancelled"
+                        )
+                    }
+                    ResultIn.Failure -> {
+                        states = states.copy(
+                            errorMessage = "Login was Failed"
+                        )
+                    }
+                    is ResultIn.Success -> {
+                        states = states.copy(
+                            loggedInUser = loginAction.result.name
+                        )
+                    }
+
+                    ResultIn.NoCredentials ->{
+                        states = states.copy(
+                            errorMessage = "No Credentials were set up."
+                        )
+                    }
+                }
             }
         }
     }
@@ -90,7 +121,7 @@ class UserViewModel() : ViewModel() {
 
     fun action(event: UserEvent, context: Context){
         when(event){
-            is UserEvent.Login -> Logins(event.user,event.state,context)
+            is UserEvent.Login -> Logins(event.email,event.password,event.state,context)
             is UserEvent.CreateAccount -> CreateAccount(event.user,event.state,context)
             is UserEvent.signOut -> signout(event.state,context)
             is UserEvent.Upload_Image -> upload(event.image,context)
@@ -214,7 +245,7 @@ class UserViewModel() : ViewModel() {
     *this function for login
     * */
     @SuppressLint("SuspiciousIndentation")
-    private fun Logins(User: user, state: (state: Boolean) -> Unit, context: Context) {
+    private fun Logins(emial:String,password:String, state: (state: Boolean) -> Unit, context: Context) {
 
        viewModelScope.launch{
            FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
@@ -222,7 +253,7 @@ class UserViewModel() : ViewModel() {
                    token.update { task.result.toString() }
                }
            }
-           Firebase.auth.signInWithEmailAndPassword(User.emial,User.password).addOnCompleteListener {
+           Firebase.auth.signInWithEmailAndPassword(emial,password).addOnCompleteListener {
                    task->
                if (task.isSuccessful) {
                    // Sign in success, update UI with the signed-in user's information
@@ -683,8 +714,8 @@ class UserViewModel() : ViewModel() {
     private fun upload (filepath: String, context: Context) {
 
         config.put("cloud_name", "***********")
-        config.put("api_key", "***********")
-        config.put("api_secret", "***********")
+        config.put("api_key", "********")
+        config.put("api_secret", "*************")
         MediaManager.init(context,config)
             MediaManager.get().upload(filepath)
                 .option("public_id",name)
@@ -722,9 +753,9 @@ class UserViewModel() : ViewModel() {
      @SuppressLint("SuspiciousIndentation")
      fun generateSignedUrl(publicId: String): String? {
         val config = mutableMapOf<String, Any>()
-        config["cloud_name"] = "**********************"
-        config["api_key"] = "***********"
-        config["api_secret"] = "**********************"
+        config["cloud_name"] = "************"
+        config["api_key"] = "************"
+        config["api_secret"] = "*********************"
 
         val cloudinary = Cloudinary(config)
         val signedUrl = cloudinary.url()
@@ -732,6 +763,7 @@ class UserViewModel() : ViewModel() {
             .signed(true)  // Private image
             .generate(publicId)
 
+        
     // Return the signed URL for the image
              return signedUrl
     }
