@@ -21,6 +21,7 @@ import com.example.test.MainActivity
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.example.test.R
+import com.example.test.UiHome.MessageScreen
 import com.example.test.UiHome.Screen
 import com.example.test.ViewModel.UserViewModel
 import java.util.Random
@@ -42,9 +43,10 @@ class Message: FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotification()
         }
-        val intent = Intent(applicationContext, MainActivity::class.java).apply {
+        val intent = Intent(applicationContext, MainActivity()::class.java).apply {
             // Pass any additional data or specify the route
-            putExtra("navigation_route", Screen.Message.route)
+
+            putExtra("route", Screen.Message.route)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 

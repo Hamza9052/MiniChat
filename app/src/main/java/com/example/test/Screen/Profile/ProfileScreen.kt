@@ -1,5 +1,6 @@
 package com.example.test.Screen.Profile
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -47,6 +48,8 @@ import androidx.navigation.NavHostController
 import android.net.Uri
 import androidx.annotation.Size
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
@@ -56,11 +59,12 @@ import com.example.test.ViewModel.UserViewModel
 import java.io.File
 import kotlin.contracts.contract
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
     val imageUri = rememberSaveable { mutableStateOf("") }
-
-    var image = ViewModel.generateSignedUrl(ViewModel.name)
+    val name by ViewModel._name.observeAsState()
+    var image = ViewModel.generateSignedUrl(name.toString())
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(navController.context)
             .data(image)
@@ -161,7 +165,7 @@ fun ProfileScreen(navController: NavController, ViewModel: UserViewModel) {
         }
         Spacer(modifier = Modifier.weight(0.1f))
         Text(
-            ViewModel.name,
+            name.toString(),
             color = colorResource(R.color.BurlyWood),
             fontSize = 25.sp,
             fontWeight = FontWeight.ExtraBold,
