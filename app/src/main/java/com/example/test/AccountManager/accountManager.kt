@@ -37,6 +37,7 @@ class accountManager(
                     password = password
                 )
             )
+
             Result.Success(email)
         }catch (e: CreateCredentialCancellationException){
             e.printStackTrace()

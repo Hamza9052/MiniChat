@@ -137,4 +137,7 @@ dependencies {
     // Credential Saving
     implementation ("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+
+    implementation ("com.google.accompanist:accompanist-swiperefresh:0.28.0")
+
 }
