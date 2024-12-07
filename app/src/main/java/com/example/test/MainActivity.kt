@@ -74,18 +74,21 @@ class MainActivity : ComponentActivity() {
 
                 }
 
-//                var isLoggin = ViewModel.isLoggedIn.collectAsState()
-//                var save = ViewModel.check(navController.context,navController)
+
+                var save = ViewModel.check(navController.context,navController)
+
+                var savedRoute = if (save == "true"){
+                    Screen.Main.route
+                }else{
+                     Screen.Login.route
+                }
 
 
 
 
 
 
-
-
-
-                NavHost(navController = navController, startDestination = Screen.Login.route){
+                NavHost(navController = navController, startDestination = savedRoute){
                     composable(
                         Screen.Main.route,
                         enterTransition = {

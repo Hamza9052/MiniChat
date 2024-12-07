@@ -93,6 +93,8 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.currentRecomposeScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -100,14 +102,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.lifecycle.asFlow
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.test.AccountManager.accountManager
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.text.ifEmpty
 
-@SuppressLint("StateFlowValueCalledInComposition", "SuspiciousIndentation")
+@SuppressLint("StateFlowValueCalledInComposition", "SuspiciousIndentation",
+    "CoroutineCreationDuringComposition"
+)
 @Composable
 fun MainScreen(
     viewModel: UserViewModel,
@@ -117,30 +125,30 @@ fun MainScreen(
     val showDialog = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState (initialValue = DrawerValue.Closed )
     val scope = rememberCoroutineScope()
-
+    val isRefreshing = remember { mutableStateOf(false) }
+    val name by viewModel._name.observeAsState()
     val profile = rememberAsyncImagePainter(
         model = ImageRequest.Builder(navController.context)
-            .data(viewModel.generateSignedUrl(viewModel.name))
+            .data(viewModel.generateSignedUrl(name.toString()))
             .crossfade(true)
             .error(R.drawable.profil)
             .build()
     )
 
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = Color.DarkGray,
-                drawerContentColor = contentColorFor(colorResource(R.color.White)),
-                modifier =     if(navController.context.resources.configuration.smallestScreenWidthDp >= 400){
-                    Modifier
-                        .fillMaxWidth(0.3f)
-                }else{
-                    Modifier
-                        .fillMaxWidth(0.7f)
-                },
-                content = {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                    drawerContainerColor = Color.DarkGray,
+                    drawerContentColor = contentColorFor(colorResource(R.color.White)),
+                    modifier =     if(navController.context.resources.configuration.smallestScreenWidthDp >= 400){
+                        Modifier
+                            .fillMaxWidth(0.3f)
+                    }else{
+                        Modifier
+                            .fillMaxWidth(0.7f)
+                    },
+                    content = {
 
                         VerticalDivider(modifier = Modifier.height(10.dp))
                         Row(
@@ -173,7 +181,7 @@ fun MainScreen(
                                     )
                                     Column {
                                         Text(
-                                            viewModel.name,
+                                            name.toString(),
                                             color = colorResource(R.color.BurlyWood),
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.ExtraBold,
@@ -231,92 +239,94 @@ fun MainScreen(
                             colors = NavigationDrawerItemDefaults.colors(colorResource(R.color.DimGray))
                         )
                     }
-            )
-        },
-        content =  {
-
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .background(Color.DarkGray)
-    ) {
-
-        Searchbar(active, viewModel, navController, showDialog,{
-            scope.launch {
-                drawerState.open()
-            }
-        })
-
-        if (showDialog.value) {
-            Log.e("show", "work")
-
-            AlertDialogSingOut(
-                onDismissRequest = { showDialog.value = false },
-                onConfirmation = {
-                    viewModel.action(
-                        UserEvent.signOut() { state ->
-                            if (state) {
-                                showDialog.value = false
-                                navController.navigate(Screen.Login.route)
-                            }
-                        },
-                        context = navController.context
-                    )
-                }
-            )
-
-        }
-
-
-
-
-
-
-        LazyColumn(Modifier.fillMaxSize()) {
-
-            items(viewModel.userlist.value.size) { item ->
-                val user = viewModel.userlist.value[item]
-                val image = viewModel.ImageUri.value[item]
-
-                LaunchedEffect(user){
-                    viewModel.getlastmessage(user)
-                }
-                val painterUri = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(navController.context)
-                        .data(image)
-                        .crossfade(true)
-                        .error(R.drawable.profil)
-                        .build()
                 )
+            },
+            content =  {
 
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .background(Color.DarkGray)
+                ) {
 
-
-
-
-                    val lastMessage = viewModel.last.value?.get(user)
-                    if (lastMessage == "" || viewModel.name == user || lastMessage == null) {
-                        Log.e("message is Empty", lastMessage.toString())
-                        Log.e("test id for saga ", user)
-                    } else {
-                        if (painterUri.state is coil.compose.AsyncImagePainter.State.Loading){
-                            CircularProgressIndicator(
-                                color = colorResource(R.color.BurlyWood),
-                            )
+                    Searchbar(active, viewModel, navController, showDialog,{
+                        scope.launch {
+                            drawerState.open()
                         }
-                        Spacer(modifier = Modifier.height(15.dp))
-                        listItem(user, navController, lastMessage.toString(),painterUri)
+                    })
+
+                    if (showDialog.value) {
+                        Log.e("show", "work")
+
+                        AlertDialogSingOut(
+                            onDismissRequest = { showDialog.value = false },
+                            onConfirmation = {
+                                viewModel.action(
+                                    UserEvent.signOut() { state ->
+                                        if (state) {
+                                            showDialog.value = false
+                                            navController.navigate(Screen.Login.route)
+                                        }
+                                    },
+                                    context = navController.context
+                                )
+                            }
+                        )
+
+                    }
+                    SwipeRefresh(
+                        state = rememberSwipeRefreshState(isRefreshing.value),
+                        onRefresh = {
+                            isRefreshing.value = true
+                            scope.launch{
+                                delay(2000)
+                                isRefreshing.value = false
+                            }
+
+                        }
+                    ) {
+                    LazyColumn(
+                        Modifier.fillMaxSize()
+                    ) {
+
+                        items(viewModel.userlist.value.size) { item ->
+                            var user = viewModel.userlist.value[item]
+                            var image = viewModel.ImageUri.value[item]
+                            var painterUri = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(navController.context)
+                                    .data(image)
+                                    .crossfade(true)
+                                    .error(R.drawable.profil)
+                                    .build()
+                            )
+                            LaunchedEffect(user) {
+                                viewModel.getlastmessage(user)
+                            }
+
+
+                            var lastMessage = viewModel.last.value?.get(user)
+                            Log.e("test id for saga ", "${name.toString() + user + lastMessage}")
+                            if (lastMessage == "" || name.toString() == user || lastMessage == null) {
+                                Log.e("message is Empty", lastMessage.toString())
+                                Log.e("test id for saga ", user)
+                            } else {
+                                Spacer(modifier = Modifier.height(15.dp))
+                                listItem(user, navController, lastMessage.toString(),painterUri)
+                            }
+
+
+                        }
+                    }
+
                     }
 
 
+                }
+            })
 
 
-            }
-        }
 
-
-    }
-        })
 }
 
 
@@ -446,10 +456,10 @@ fun Searchbar(
             }
         ) {
             val size = viewModel.userlist.value.size
-
+            val name by viewModel._name.observeAsState()
             for (i in 0 until size) {
                 val users = viewModel.userlist.value[i]
-                if (users.contains(search) && search.isNotEmpty() && viewModel.name != users) {
+                if (users.contains(search) && search.isNotEmpty() && name.toString() != users) {
                     LazyColumn {
                         item {
                             searchName(navController, users)
