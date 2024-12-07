@@ -52,6 +52,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.test.AccountManager.LoginAction
+import com.example.test.AccountManager.Result
 import com.example.test.AccountManager.ResultIn
 import com.example.test.AccountManager.accountManager
 import com.example.test.Event.Loginstate
@@ -79,6 +80,7 @@ fun Login(
     var user by remember {
         mutableStateOf(user())
     }
+
     LaunchedEffect(key1 = true) {
         val result = accountManager.Logging()
         if (result is ResultIn.Success) {
@@ -230,7 +232,16 @@ fun Login(
                        state.email,
                        state.password
                    )
-                   onAction(LoginAction.Login(rustl))
+                   if (rustl is Result.Failure){
+                       ViewModel.action(UserEvent.Login(state.email,state.password) { state ->
+                           navController.navigate(Screen.Main.route)
+
+                       }, context)
+                   }
+
+                   onAction(
+                       LoginAction.Login(rustl)
+                   )
                }
 
 
