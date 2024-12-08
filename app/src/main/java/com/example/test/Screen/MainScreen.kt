@@ -92,6 +92,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -125,6 +126,7 @@ fun MainScreen(
     val showDialog = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState (initialValue = DrawerValue.Closed )
     val scope = rememberCoroutineScope()
+    val lastMessages by viewModel.lastMessage.collectAsState()
     val isRefreshing = remember { mutableStateOf(false) }
     val name by viewModel._name.observeAsState()
     val profile = rememberAsyncImagePainter(
@@ -134,6 +136,11 @@ fun MainScreen(
             .error(R.drawable.profil)
             .build()
     )
+    val isLoading by viewModel.isLoading.collectAsState()
+    val userList = viewModel.userlist.value
+    LaunchedEffect(Unit) {
+        viewModel.fetchLastMessagesForAllUsers(userList, name!!)
+    }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -281,43 +288,54 @@ fun MainScreen(
                             isRefreshing.value = true
                             scope.launch{
                                 delay(2000)
+                                viewModel.fetchLastMessagesForAllUsers(userList, name!!)
+                                viewModel.users()
                                 isRefreshing.value = false
                             }
 
                         }
                     ) {
-                    LazyColumn(
-                        Modifier.fillMaxSize()
-                    ) {
-
-                        items(viewModel.userlist.value.size) { item ->
-                            var user = viewModel.userlist.value[item]
-                            var image = viewModel.ImageUri.value[item]
-                            var painterUri = rememberAsyncImagePainter(
-                                model = ImageRequest.Builder(navController.context)
-                                    .data(image)
-                                    .crossfade(true)
-                                    .error(R.drawable.profil)
-                                    .build()
-                            )
-                            LaunchedEffect(user) {
-                                viewModel.getlastmessage(user)
+                        if (isLoading) {
+                            // Show a loading indicator
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
                             }
+                        } else {
+                            LazyColumn(
+                                Modifier.fillMaxSize()
+                            ) {
+
+                                items(viewModel.userlist.value.size) { item ->
+                                    var user = viewModel.userlist.value.get(item)
+                                    var image = viewModel.ImageUri.value[item]
+                                    var painterUri = rememberAsyncImagePainter(
+                                        model = ImageRequest.Builder(navController.context)
+                                            .data(image)
+                                            .crossfade(true)
+                                            .error(R.drawable.profil)
+                                            .build()
+                                    )
 
 
-                            var lastMessage = viewModel.last.value?.get(user)
-                            Log.e("test id for saga ", "${name.toString() + user + lastMessage}")
-                            if (lastMessage == "" || name.toString() == user || lastMessage == null) {
-                                Log.e("message is Empty", lastMessage.toString())
-                                Log.e("test id for saga ", user)
-                            } else {
-                                Spacer(modifier = Modifier.height(15.dp))
-                                listItem(user, navController, lastMessage.toString(),painterUri)
+                                    var lastMessage = lastMessages[user]
+
+
+                                    if (lastMessage == "" || name.toString() == user) {
+                                        Log.e("message is Empty", lastMessage.toString())
+                                        Log.e("test id for saga ", user)
+                                    } else {
+                                        Spacer(modifier = Modifier.height(15.dp))
+                                        listItem(user, navController, lastMessage.toString(),painterUri)
+                                    }
+
+
+                                }
                             }
-
-
                         }
-                    }
+
 
                     }
 
@@ -455,10 +473,10 @@ fun Searchbar(
                 )
             }
         ) {
-            val size = viewModel.userlist.value.size
+            val size = viewModel.userlist.value!!.size
             val name by viewModel._name.observeAsState()
             for (i in 0 until size) {
-                val users = viewModel.userlist.value[i]
+                val users = viewModel.userlist.value!![i]
                 if (users.contains(search) && search.isNotEmpty() && name.toString() != users) {
                     LazyColumn {
                         item {

@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 }
 
 
-                var save = ViewModel.check(navController.context,navController)
+                var save = ViewModel.check(navController.context)
 
                 var savedRoute = if (save == "true"){
                     Screen.Main.route
