@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -40,13 +42,14 @@ class Message: FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+
+        Handler(Looper.getMainLooper()).post {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotification()
         }
         val intent = Intent(applicationContext, MainActivity()::class.java).apply {
             // Pass any additional data or specify the route
-
-            putExtra("route", Screen.Message.route)
+            putExtra("route", "message/${message.data["title"]}")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
 
@@ -74,13 +77,15 @@ class Message: FirebaseMessagingService() {
                 )!= PackageManager.PERMISSION_GRANTED
                 )
                 {
-                    return
+                    return@post
                 }
                 notify(Random().nextInt(3000),build.build())
             }
         }else{
             NotificationManagerCompat.from(applicationContext)
                 .notify(Random().nextInt(3000),build.build())
+        }
+
         }
     }
     @RequiresApi(Build.VERSION_CODES.O)

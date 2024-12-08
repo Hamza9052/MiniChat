@@ -77,6 +77,7 @@ class MainActivity : ComponentActivity() {
 
                 var save = ViewModel.check(navController.context)
 
+
                 var savedRoute = if (save == "true"){
                     Screen.Main.route
                 }else{
@@ -84,11 +85,10 @@ class MainActivity : ComponentActivity() {
                 }
 
 
+                var startDestination = intent.getStringExtra("route") ?: savedRoute
 
 
-
-
-                NavHost(navController = navController, startDestination = savedRoute){
+                NavHost(navController = navController, startDestination = startDestination){
                     composable(
                         Screen.Main.route,
                         enterTransition = {
