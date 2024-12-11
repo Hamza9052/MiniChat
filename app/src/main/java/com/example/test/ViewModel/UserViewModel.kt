@@ -659,37 +659,29 @@ class UserViewModel() : ViewModel() {
 
     } }
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    fun fetchLastMessagesForAllUsers(users: List<String>, currentUser: String) {
-        _isLoading.value = true
 
-        val fetchJobs = users.map { user ->
-            if (user != currentUser) {
-                getlastmessage(user, currentUser)
-            } else {
-                null
-            }
-        }.filterNotNull()
+
+    fun fetchLastMessagesForAllUsers(users: List<String>, currentUser: String) {
+        _DataLoadign.value = true
+
+        val fetchJobs = users
+            .filter { it != currentUser }
+            .map { user -> getlastmessage(user, currentUser) }
 
         // Wait for all fetching jobs to complete
         viewModelScope.launch {
             fetchJobs.joinAll()
-            _isLoading.value = false
+            _DataLoadign.value = false
         }
     }
 
-//    private val lastMessage = MutableStateFlow(mutableMapOf<String,String>())
-//    private val lastMessage = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
-//    val last:StateFlow<Map<String,String>> = lastMessage.asStateFlow()
-//    val last: LiveData<MutableMap<String, String>> = lastMessage
-private val _lastMessage = MutableStateFlow<Map<String, String>>(emptyMap())
-    val lastMessage: StateFlow<Map<String, String>> = _lastMessage.asStateFlow()
+
+    private val _lastMessage = MutableLiveData<Map<String, String>>(mutableMapOf())
+    val lastMessage: LiveData<Map<String, String>> = _lastMessage
     private fun getlastmessage(username: String, name: String):Job {
         return viewModelScope.launch {
             val collectionPath1 = "$username$name"
             val collectionPath2 = "$name$username"
-
             val result = try {
                 val snapshot1 = Firebase.firestore
                     .collection(Constants.MESSAGES)
@@ -706,8 +698,10 @@ private val _lastMessage = MutableStateFlow<Map<String, String>>(emptyMap())
                 Log.e("getLastMessage", "Error fetching messages for $username", e)
                 ""
             }
+            _lastMessage.value = _lastMessage.value.orEmpty().toMutableMap().apply {
+                put(username, result)
+            }
 
-            updateLastMessage(username, result)
         }
     }
 
@@ -729,11 +723,7 @@ private val _lastMessage = MutableStateFlow<Map<String, String>>(emptyMap())
         }
     }
 
-    private fun updateLastMessage(username: String, message: String) {
-        _lastMessage.value = _lastMessage.value.toMutableMap().apply {
-            put(username, message)
-        }
-    }
+
     /**
      * Update the list after getting the details from firestore
      */
@@ -785,7 +775,6 @@ private val _lastMessage = MutableStateFlow<Map<String, String>>(emptyMap())
      @SuppressLint("SuspiciousIndentation")
      fun generateSignedUrl(publicId: String): String? {
         val config = mutableMapOf<String, Any>()
-
 
         val cloudinary = Cloudinary(config)
         val signedUrl = cloudinary.url()
