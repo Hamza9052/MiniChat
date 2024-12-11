@@ -65,7 +65,6 @@ android {
 }
 composeCompiler {
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
-
 }
 dependencies {
     // Core libraries

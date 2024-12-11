@@ -136,10 +136,13 @@ fun MainScreen(
             .error(R.drawable.profil)
             .build()
     )
+    var loadingData = viewModel.DataLoadign.observeAsState(Boolean)
     val isLoading by viewModel.isLoading.collectAsState()
-    val userList = viewModel.userlist.value
+    val userList = viewModel.userlist.observeAsState(emptyList<String>())
+    val ImageUri = viewModel.ImageUri.observeAsState(emptyList<String>())
     LaunchedEffect(Unit) {
-        viewModel.fetchLastMessagesForAllUsers(userList, name!!)
+        viewModel.fetchLastMessagesForAllUsers(userList.value, name!!)
+        viewModel.users()
     }
 
         ModalNavigationDrawer(
@@ -288,14 +291,14 @@ fun MainScreen(
                             isRefreshing.value = true
                             scope.launch{
                                 delay(2000)
-                                viewModel.fetchLastMessagesForAllUsers(userList, name!!)
+                                viewModel.fetchLastMessagesForAllUsers(userList.value, name!!)
                                 viewModel.users()
                                 isRefreshing.value = false
                             }
 
                         }
                     ) {
-                        if (isLoading) {
+                        if (loadingData.value == true) {
                             // Show a loading indicator
                             Box(
                                 modifier = Modifier.fillMaxSize(),
@@ -308,9 +311,9 @@ fun MainScreen(
                                 Modifier.fillMaxSize()
                             ) {
 
-                                items(viewModel.userlist.value.size) { item ->
-                                    var user = viewModel.userlist.value.get(item)
-                                    var image = viewModel.ImageUri.value[item]
+                                items(userList.value.size) { item ->
+                                    var user = userList.value[item]
+                                    var image = ImageUri.value[item]
                                     var painterUri = rememberAsyncImagePainter(
                                         model = ImageRequest.Builder(navController.context)
                                             .data(image)

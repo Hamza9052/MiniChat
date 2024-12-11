@@ -48,8 +48,14 @@ import java.time.LocalDateTime
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.colorResource
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.map
+import androidx.navigation.NavController
 import com.example.test.AccountManager.ResultIn
 import com.example.test.R
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.tasks.await
 
 class UserViewModel() : ViewModel() {
 
@@ -140,32 +146,29 @@ class UserViewModel() : ViewModel() {
 
     private val _listTime = MutableLiveData(emptyList<String>().toMutableList())
     val listTime :LiveData<MutableList<String>> = _listTime
-    private val firstNames = MutableStateFlow(mutableListOf<String>())
-    val userlist:StateFlow<List<String>> = firstNames.asStateFlow()
+    private val firstNames = MutableLiveData<MutableList<String>>(mutableListOf())
+    val userlist: LiveData<List<String>> = firstNames.map { it.toList() }
 
-    private val _ImageUri = MutableStateFlow(mutableListOf<String>())
-    val ImageUri:StateFlow<List<String>> = _ImageUri.asStateFlow()
+    private val _ImageUri = MutableLiveData<MutableList<String>>(mutableListOf())
+    val ImageUri:LiveData<List<String>> = _ImageUri.map { it.toList() }
     private val _isLoggedIn = MutableStateFlow(false) // Default to logged out
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
-    var name= ""
-   var id =""
+    private val name = MutableLiveData("")
+    val _name: LiveData<String> get() = name
+
+    private val id = MutableLiveData("")
 
 
-    init {
-        users()
 
-    }
 
 
     init {
             if (Firebase.auth.currentUser?.uid != null) {
                 fetchUserFirstName(Firebase.auth.currentUser?.uid!!)
-
             }
 
     }
-
 
 
 
@@ -174,24 +177,34 @@ class UserViewModel() : ViewModel() {
      *this function for save Login
      * */
 
+    @SuppressLint("SuspiciousIndentation")
+    fun check(context: Context):String {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val check = sharedPreferences.getString("login","")
+        val email = sharedPreferences.getString("email","")
+        val password = sharedPreferences.getString("password","")
+            if (check.equals("true")){
+                Logins(emial = email.toString(),password = password.toString(), context = context, state = {state->
+                    if (!state) {
+                        // If login fails, reset the login state in SharedPreferences
+                        sharedPreferences.edit()
+                            .putString("login", "false")
+                            .apply()
+                    } else {
+                        _isLoggedIn.value = true
+                    }
 
-//    @SuppressLint("SuspiciousIndentation")
-//    fun check(context: Context, navController: NavController):String {
-//        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-//        val check = sharedPreferences.getString("login","")
-//        val email=sharedPreferences.getString("email","")
-//        val password = sharedPreferences.getString("password","")
-//            if (check.equals("true")){
-//                Logins(user(password = password!!, emial = email!!), context = context, state = {check.toBoolean()})
-//                sharedPreferences.getString("user","")
-//                sharedPreferences.getString("uid","")
-//                sharedPreferences.getString("user","")
-//                sharedPreferences.getString("name","")
-//                sharedPreferences.getString("email","")
-//            }
-//
-//        return check.toString()
-//    }
+                })
+
+                sharedPreferences.getString("uid","")
+                sharedPreferences.getString("name","")
+                sharedPreferences.getString("email","")
+            }else{
+                _isLoggedIn.value = true
+            }
+
+        return check!!
+    }
     private var token = MutableStateFlow("")
 
 
@@ -247,7 +260,7 @@ class UserViewModel() : ViewModel() {
     @SuppressLint("SuspiciousIndentation")
     private fun Logins(emial:String,password:String, state: (state: Boolean) -> Unit, context: Context) {
 
-       viewModelScope.launch{
+
            FirebaseMessaging.getInstance().token.addOnCompleteListener{task->
                if (task.isSuccessful){
                    token.update { task.result.toString() }
@@ -259,10 +272,10 @@ class UserViewModel() : ViewModel() {
                    // Sign in success, update UI with the signed-in user's information
 
                    Log.d(TAG, "Login:success")
-                   id = task.result.user?.uid!!
+                   id.value = task.result.user?.uid!!
                    state(true)
                    FirebaseFirestore.getInstance()
-                       .collection("users").document(id)
+                       .collection("users").document(id.value.toString())
                        .update("FcmToken",token.value).addOnCompleteListener{task->
                            if (task.isSuccessful){
                                Log.d("token Success", "Logins: isSuccessful", )
@@ -272,11 +285,20 @@ class UserViewModel() : ViewModel() {
                        }
                    FirebaseFirestore.getInstance()
                        .collection("users")
-                       .document(id).get()
+                       .document(id.value.toString()).get()
                        .addOnSuccessListener { document ->
-                           name = document.getString("first_name").toString()
+                           name.value = document.getString("first_name").toString()
+                           _isLoggedIn.value = true
+                           val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                           val editor = sharedPreferences.edit()
+                                 .putString("uid",id.value)
+                                 .putString("login", _isLoggedIn.value.toString())
+                                 .putString("name",name.value)
+                                 .putString("password",password)
+                                 .putString("email",emial)
+                           editor.apply()
                        }
-                   _isLoggedIn.value = true
+
 
 
 
@@ -293,7 +315,7 @@ class UserViewModel() : ViewModel() {
                }
            }
 
-       }
+
 
     }
 
@@ -307,7 +329,7 @@ class UserViewModel() : ViewModel() {
             Firebase.auth.signOut()
             state(true)
              FirebaseFirestore.getInstance()
-            .collection("users").document(id)
+            .collection("users").document(id.value.toString())
             .update("FcmToken","").addOnCompleteListener{task->
                 if (task.isSuccessful){
                     Log.d("token Success", "Logins: isSuccessful", )
@@ -316,7 +338,10 @@ class UserViewModel() : ViewModel() {
                 }
             }
         _isLoggedIn.value = false
-
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        sharedPreferences.edit()
+            .clear()
+            .apply()
 
 
     }
@@ -326,21 +351,37 @@ class UserViewModel() : ViewModel() {
     /**
    * this function for show all user on your main Screen
    * */
+    private val _DataLoadign = MutableLiveData<Boolean>()
+    val DataLoadign: LiveData<Boolean> get() = _DataLoadign
      fun users() {
-
+         _DataLoadign.value = true
                 FirebaseFirestore.getInstance().collection("users")
                     .get()
                     .addOnSuccessListener { result ->
-
+                        var tes = ""
+                        val use = firstNames.value ?:mutableListOf()
+                        val ima = _ImageUri.value ?:mutableListOf()
                         for (document in result) {
 
                             val firs_name = document.getString("first_name")
-                            if (firs_name != null) {
-                                firstNames.value.add(firs_name)
-                                val name = generateSignedUrl(firs_name)
-                                _ImageUri.value.add(name!!)
+                           for (l in 0 until userlist.value!!.size ){
+                               if (firs_name == userlist.value!!.get(l)){
+                                   tes = firs_name
+
+                               }
+                           }
+                            if (firs_name != null && firs_name != tes) {
+                                use.add(firs_name.toString())
+                                val name = generateSignedUrl(firs_name.toString())
+                                ima.add(name!!)
                             }
                         }
+
+                        _ImageUri.value = ima
+                        firstNames.value = use
+                        _DataLoadign.value = false
+                    }.addOnFailureListener{
+                        _DataLoadign.value = false
                     }
     }
 
@@ -350,12 +391,12 @@ class UserViewModel() : ViewModel() {
 
     private var tok = MutableStateFlow("")
 
-    fun sendMessage(name:String,messag:String,context: Context){
+    fun sendMessage(names:String,messag:String,context: Context){
         viewModelScope.launch{
             try {
                 var toks:String = ""
             FirebaseFirestore.getInstance().collection("users")
-                .whereEqualTo("first_name",name)
+                .whereEqualTo("first_name",names)
                 .get()
                 .addOnSuccessListener{documents->
                  viewModelScope.launch{
@@ -373,7 +414,7 @@ class UserViewModel() : ViewModel() {
                                  message = NotificationData(
                                      token = tok.value,
                                      hashMapOf(
-                                         "title" to _used.value.toString(),
+                                         "title" to name.value!!,
                                          "body" to messag
                                      )
                                  ),
@@ -390,12 +431,6 @@ class UserViewModel() : ViewModel() {
                 }
 
                 Log.e("get Token", "get Token is success:${toks}")
-
-
-
-
-
-
 
             } catch (e: Exception) {
             Log.e("sendMessage", "Error in sendMessage: ${e.message}", e)
@@ -484,8 +519,8 @@ class UserViewModel() : ViewModel() {
     @SuppressLint("NewApi")
     fun NewMessage(username:String){
         val message:String = _message.value ?: throw IllegalArgumentException("Message empty")
-        val collection1 = username + name
-        val collection2 = name + username
+        val collection1 = username + name.value
+        val collection2 = name.value + username
         viewModelScope.launch {
             val collectiona = Firebase.firestore.collection(Constants.MESSAGES).document("allmessage").collection(collection2)
 
@@ -499,7 +534,7 @@ class UserViewModel() : ViewModel() {
 
                         hashMapOf(
                             Constants.MESSAGE to message,
-                            Constants.SENT_BY to name,
+                            Constants.SENT_BY to name.value,
                             Constants.SENT_ON to System.currentTimeMillis(),
                             Constants.TIME to "${LocalDateTime.now().hour}:${LocalDateTime.now().minute}"
                         )
@@ -522,14 +557,14 @@ class UserViewModel() : ViewModel() {
         Firebase.firestore
             .collection(Constants.MESSAGES)
             .document("allmessage")
-            .collection(name+username)
+            .collection(name.value+username)
             .get().addOnSuccessListener{sanphot->
 
 
 
                 if (sanphot.isEmpty){
                     Firebase.firestore.collection(Constants.MESSAGES)
-                        .document("allmessage").collection(username+name)
+                        .document("allmessage").collection(username+name.value)
                         .orderBy(Constants.SENT_ON)
                         .addSnapshotListener{value , e ->
                             if (e != null){
@@ -544,10 +579,10 @@ class UserViewModel() : ViewModel() {
                                     val time = doc.getString("time")
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
-                                    if (nams != null && nams == name || nams == username){
+                                    if (nams != null && nams == name.value || nams == username){
                                         val data = doc.data
                                         data?.set(Constants.IS_CURRENT_USER,
-                                            name == data[Constants.SENT_BY].toString()
+                                            name.value == data[Constants.SENT_BY].toString()
                                         )
                                         if (data != null) {
                                             list.add(data)
@@ -577,7 +612,7 @@ class UserViewModel() : ViewModel() {
             } else{
                     Firebase.firestore.collection(Constants.MESSAGES)
                         .document("allmessage")
-                        .collection(name+username)
+                        .collection(name.value+username)
                         .orderBy(Constants.SENT_ON)
                         .addSnapshotListener{value , e ->
                             if (e != null){
@@ -591,9 +626,9 @@ class UserViewModel() : ViewModel() {
                                     val time = doc.getString("time")
                                     val nams = doc.getString("sent_by")
                                     Log.e("data", "${nams}")
-                                    if (nams != null && nams == name || nams == username){
+                                    if (nams != null && nams == name.value || nams == username){
                                         val data = doc.data
-                                        data?.set(Constants.IS_CURRENT_USER, name == data[Constants.SENT_BY].toString())
+                                        data?.set(Constants.IS_CURRENT_USER, name.value == data[Constants.SENT_BY].toString())
 
                                         if (data != null) {
                                             list.add(data)
@@ -624,83 +659,81 @@ class UserViewModel() : ViewModel() {
 
     } }
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    fun fetchLastMessagesForAllUsers(users: List<String>, currentUser: String) {
+        _isLoading.value = true
 
-
-//    private val lastmessage = MutableStateFlow(mutableMapOf<String,String>())
-    private val lastMessage = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
-//    val last:StateFlow<Map<String,String>> = lastMessage.asStateFlow()
-    val last: LiveData<MutableMap<String, String>> = lastMessage
-    fun getlastmessage(username: String) {
-
-
-        val collectionPath1 = "$username$name"
-        val collectionPath2 = "$name$username"
-
-
-        Firebase.firestore
-            .collection(Constants.MESSAGES)
-            .document("allmessage")
-            .collection(collectionPath1)
-            .orderBy(Constants.SENT_ON)
-            .limitToLast(1)
-            .get()
-            .addOnSuccessListener { snapshot1 ->
-
-                if (!snapshot1.isEmpty) {
-                    // Process the result from collectionPath1
-                    snapshot1?.documents?.lastOrNull()?.let { doc ->
-                        val lastMsg = doc.getString("message").orEmpty()
-                        val currentLast = lastMessage.value?.get(username)
-
-                        // Update only if the message changes
-                        if (currentLast != lastMsg) {
-
-                            lastMessage.value?.put( username,lastMsg )
-                        }
-                    } ?: run {
-                        // No messages found for the user
-                        lastMessage.value?.put( username,"" )
-                    }
-                } else {
-                    // Check the second collection path
-                    Firebase.firestore
-                        .collection(Constants.MESSAGES)
-                        .document("allmessage")
-                        .collection(collectionPath2)
-                        .orderBy(Constants.SENT_ON)
-                        .limitToLast(1)
-                        .get()
-                        .addOnSuccessListener { snapshot2 ->
-
-                            snapshot2?.documents?.lastOrNull()?.let { doc ->
-                                val lastMsg = doc.getString("message").orEmpty()
-                                val currentLast = lastMessage.value?.get(username)
-
-                                // Update only if the message changes
-                                if (currentLast != lastMsg) {
-
-                                    lastMessage.value?.put( username,lastMsg )
-                                }
-                            } ?: run {
-                                // No messages found for the user
-                                lastMessage.value?.put( username,"" )
-                            }
-
-                        }
-                        .addOnFailureListener { e ->
-
-                            Log.e("getLastMessage", "Error querying collectionPath2", e)
-
-                        }
-                }
-
+        val fetchJobs = users.map { user ->
+            if (user != currentUser) {
+                getlastmessage(user, currentUser)
+            } else {
+                null
             }
-            .addOnFailureListener { e ->
-                Log.e("getLastMessage", "Error querying collectionPath1", e)
+        }.filterNotNull()
 
-            }
+        // Wait for all fetching jobs to complete
+        viewModelScope.launch {
+            fetchJobs.joinAll()
+            _isLoading.value = false
+        }
     }
 
+//    private val lastMessage = MutableStateFlow(mutableMapOf<String,String>())
+//    private val lastMessage = MutableLiveData<MutableMap<String, String>>(mutableMapOf())
+//    val last:StateFlow<Map<String,String>> = lastMessage.asStateFlow()
+//    val last: LiveData<MutableMap<String, String>> = lastMessage
+private val _lastMessage = MutableStateFlow<Map<String, String>>(emptyMap())
+    val lastMessage: StateFlow<Map<String, String>> = _lastMessage.asStateFlow()
+    private fun getlastmessage(username: String, name: String):Job {
+        return viewModelScope.launch {
+            val collectionPath1 = "$username$name"
+            val collectionPath2 = "$name$username"
+
+            val result = try {
+                val snapshot1 = Firebase.firestore
+                    .collection(Constants.MESSAGES)
+                    .document("allmessage")
+                    .collection(collectionPath1)
+                    .orderBy(Constants.SENT_ON)
+                    .limitToLast(1)
+                    .get()
+                    .await()
+
+                snapshot1.documents.lastOrNull()?.getString("message")?.orEmpty()
+                    ?: fetchFromSecondPath(collectionPath2)
+            } catch (e: Exception) {
+                Log.e("getLastMessage", "Error fetching messages for $username", e)
+                ""
+            }
+
+            updateLastMessage(username, result)
+        }
+    }
+
+    private suspend fun fetchFromSecondPath(collectionPath: String): String {
+        return try {
+            val snapshot = Firebase.firestore
+                .collection(Constants.MESSAGES)
+                .document("allmessage")
+                .collection(collectionPath)
+                .orderBy(Constants.SENT_ON)
+                .limitToLast(1)
+                .get()
+                .await()
+
+            snapshot.documents.lastOrNull()?.getString("message").orEmpty()
+        } catch (e: Exception) {
+            Log.e("getLastMessage", "Error fetching from second path: $collectionPath", e)
+            ""
+        }
+    }
+
+    private fun updateLastMessage(username: String, message: String) {
+        _lastMessage.value = _lastMessage.value.toMutableMap().apply {
+            put(username, message)
+        }
+    }
     /**
      * Update the list after getting the details from firestore
      */
@@ -711,14 +744,13 @@ class UserViewModel() : ViewModel() {
 
 
     private var config: HashMap<String, String> = HashMap()
+
     private fun upload (filepath: String, context: Context) {
 
-        config.put("cloud_name", "***********")
-        config.put("api_key", "********")
-        config.put("api_secret", "*************")
+
         MediaManager.init(context,config)
             MediaManager.get().upload(filepath)
-                .option("public_id",name)
+                .option("public_id",name.value)
                 .callback(object : UploadCallback {
                 override fun onSuccess(requestId: String?, resultData: MutableMap<Any?, Any?>?) {
                     Toast.makeText(context, "Task successful", Toast.LENGTH_SHORT).show()
@@ -753,9 +785,7 @@ class UserViewModel() : ViewModel() {
      @SuppressLint("SuspiciousIndentation")
      fun generateSignedUrl(publicId: String): String? {
         val config = mutableMapOf<String, Any>()
-        config["cloud_name"] = "************"
-        config["api_key"] = "************"
-        config["api_secret"] = "*********************"
+
 
         val cloudinary = Cloudinary(config)
         val signedUrl = cloudinary.url()
@@ -763,7 +793,7 @@ class UserViewModel() : ViewModel() {
             .signed(true)  // Private image
             .generate(publicId)
 
-        
+
     // Return the signed URL for the image
              return signedUrl
     }
