@@ -126,7 +126,7 @@ fun MainScreen(
     val showDialog = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState (initialValue = DrawerValue.Closed )
     val scope = rememberCoroutineScope()
-    val lastMessages by viewModel.lastMessage.collectAsState()
+
     val isRefreshing = remember { mutableStateOf(false) }
     val name by viewModel._name.observeAsState()
     val profile = rememberAsyncImagePainter(
@@ -137,9 +137,9 @@ fun MainScreen(
             .build()
     )
     var loadingData = viewModel.DataLoadign.observeAsState(Boolean)
-    val isLoading by viewModel.isLoading.collectAsState()
     val userList = viewModel.userlist.observeAsState(emptyList<String>())
     val ImageUri = viewModel.ImageUri.observeAsState(emptyList<String>())
+    val lastMessages = viewModel.lastMessage.observeAsState(emptyMap<String,Any>())
     LaunchedEffect(Unit) {
         viewModel.fetchLastMessagesForAllUsers(userList.value, name!!)
         viewModel.users()
@@ -323,7 +323,7 @@ fun MainScreen(
                                     )
 
 
-                                    var lastMessage = lastMessages[user]
+                                    var lastMessage = lastMessages.value[user]
 
 
                                     if (lastMessage == "" || name.toString() == user) {
